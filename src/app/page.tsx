@@ -1,37 +1,181 @@
 "use client"; // Mark this component as a Client Component
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import PdfModal from '../components/PdfModal';
+import WindowBar from '../components/WindowBar';
+// Import command processing logic, types, and constants
+import { processCommand, availableCommands, OutputMessage, CommandResult, files } from '../lib/commands';
 
-// Define Command Enum
-enum Command {
-  Help = 'help',
-  Clear = 'clear',
-  Ls = 'ls', // Add Ls command
-  Unknown = 'unknown' // Keep Unknown for the case where input doesn't match
-}
+// Define initial messages as ReactNodes (paragraphs)
+const initialWelcomeMessages: React.ReactNode[] = [
+  <p key="init-1">Welcome to zzandland.io!</p>,
+  <p key="init-2">{`Available commands: ${availableCommands}`}</p>,
+];
 
-// Define our "filesystem" entries
-const files = {
-  visible: [
-    { name: 'resume.pdf', isExecutable: false },
-    { name: 'project1', isExecutable: true }, // Example project
-    { name: 'project2', isExecutable: true }, // Example project
-  ],
-  hidden: [
-    { name: '.', isExecutable: false },
-    { name: '..', isExecutable: false },
-  ]
+// Helper function to render OutputMessage to ReactNode
+const renderOutputMessage = (message: OutputMessage, index: number): React.ReactNode => {
+  switch (message.type) {
+    case 'error':
+      return <p key={index}><span className="text-[#fb4934]">{message.text}</span></p>;
+    case 'warning':
+      return <p key={index}><span className="text-[#fabd2f]">{message.text}</span></p>;
+    case 'list':
+      return (
+        <div key={index} className="flex flex-wrap gap-x-4">
+          {message.items?.map(file => (
+            <span
+              key={file.name}
+              className={file.isExecutable ? 'text-[#8ec07c]' : ''} // Gruvbox Aqua/Green
+            >
+              {file.name}{file.isExecutable ? '*' : ''}
+            </span>
+          ))}
+        </div>
+      );
+    case 'command': // Render command echo
+       return <p key={index}>{message.text}</p>;
+    case 'normal':
+    default:
+      return <p key={index}>{message.text}</p>;
+  }
 };
 
-// Convert initial messages to ReactNode (using Fragments or simple strings)
-const initialWelcomeMessages: React.ReactNode[] = [
-  'Welcome to zzandland.io!',
-  "Type 'help' for available commands.",
-];
+// Helper function to handle keydown events
+const handleKeyDownLogic = (
+  event: KeyboardEvent,
+  isModalOpen: boolean,
+  closeModal: () => void,
+  input: string,
+  output: React.ReactNode[],
+  initialMessages: React.ReactNode[],
+  commandHistory: string[],
+  historyIndex: number,
+  setInput: React.Dispatch<React.SetStateAction<string>>,
+  setOutput: React.Dispatch<React.SetStateAction<React.ReactNode[]>>,
+  setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>,
+  setModalPdfUrl: React.Dispatch<React.SetStateAction<string | null>>,
+  setCommandHistory: React.Dispatch<React.SetStateAction<string[]>>,
+  setHistoryIndex: React.Dispatch<React.SetStateAction<number>>
+) => {
+  // Close modal on Escape or Delete key press
+  if (isModalOpen && (event.key === 'Escape' || event.key === 'Delete')) {
+    closeModal();
+    return; // Prevent further processing if closing modal
+  }
+
+  // Handle Tab autocompletion *before* preventing default for other keys
+  if (!isModalOpen && event.key === 'Tab') {
+    event.preventDefault(); // Prevent default tab behavior (focus change)
+
+    const currentInput = input.trimStart(); // Use trimmed input for logic
+    const parts = currentInput.split(' ').filter(part => part !== '');
+
+    // --- Autocompletion Logic --- 
+    if (parts.length === 1 && !currentInput.includes(' ')) {
+      // Potentially completing a command
+      const commandPrefix = parts[0];
+      const commandList = availableCommands.split(', ');
+      const matchingCommands = commandList.filter(cmd => cmd.startsWith(commandPrefix));
+
+      if (matchingCommands.length === 1) {
+        setInput(matchingCommands[0] + ' '); // Complete with space
+      }
+      // TODO: Handle multiple matches (e.g., show options or complete common prefix)
+    } else if (parts.length >= 1 && parts[0] === 'open') {
+      // Potentially completing a filename for the 'open' command
+      const filenamePrefix = parts[1] || ''; // Get prefix or empty string if no second part yet
+      const availableFilenames = files.visible.map(f => f.name);
+      const matchingFiles = availableFilenames.filter(name => name.startsWith(filenamePrefix));
+
+      if (matchingFiles.length === 1) {
+        setInput(`open ${matchingFiles[0]}`); // Complete with command + filename
+      }
+      // TODO: Handle multiple matches
+    }
+    // Add more clauses here for other commands needing completion
+
+    return; // Stop further processing for Tab key
+  }
+
+  // --- Handle Arrow Key History Navigation --- 
+  if (!isModalOpen && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
+    event.preventDefault();
+
+    if (commandHistory.length === 0) return; // No history
+
+    let newIndex = historyIndex;
+
+    if (event.key === 'ArrowUp') {
+      newIndex = Math.max(0, historyIndex - 1);
+    } else { // ArrowDown
+      newIndex = Math.min(commandHistory.length, historyIndex + 1);
+    }
+
+    if (newIndex !== historyIndex) {
+      setHistoryIndex(newIndex);
+      if (newIndex === commandHistory.length) {
+        setInput(''); // Reached the end, clear input
+      } else {
+        setInput(commandHistory[newIndex]);
+      }
+    }
+    return; // Stop further processing for arrow keys
+  }
+
+  // Prevent default for other handled keys
+  if (!isModalOpen && (event.key === 'Enter' || event.key === 'Backspace' || event.key.length === 1)) {
+    event.preventDefault();
+  }
+
+  // --- Process Enter Key --- 
+  if (!isModalOpen && event.key === 'Enter') {
+    const commandInput = input.trim();
+
+    // Add to history if it's a non-empty command and not the same as the last one
+    if (commandInput && commandInput !== commandHistory[commandHistory.length - 1]) {
+      setCommandHistory(prev => [...prev, commandInput]);
+    }
+    // Reset history index to point to the end (ready for new input)
+    setHistoryIndex(commandHistory.length + (commandInput && commandInput !== commandHistory[commandHistory.length - 1] ? 1 : 0));
+
+    const result: CommandResult = processCommand(
+      commandInput,
+      initialMessages,
+    );
+    
+    setInput(''); // Clear input after processing
+
+    // Handle clear command
+    if (result.clear) {
+      setOutput(initialMessages);
+    } else {
+      // Process the output messages into ReactNodes
+      const newOutputNodes = result.newOutput.map((msg, index) =>
+         // We need a unique key for rendering, use current output length + index
+         renderOutputMessage(msg, output.length + index)
+       );
+      // Append new nodes to existing output
+      setOutput(prevOutput => [...prevOutput, ...newOutputNodes]);
+    }
+
+    // Handle modal action
+    if (result.action?.type === 'openModal' && result.action.url) {
+      setModalPdfUrl(result.action.url);
+      setIsModalOpen(true);
+    }
+
+  // Only process Backspace/typing if modal is closed
+  } else if (!isModalOpen && event.key === 'Backspace') {
+    setInput((prevInput) => prevInput.slice(0, -1));
+  } else if (!isModalOpen && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    setInput((prevInput) => prevInput + event.key);
+    // If user types something, reset history index to the end
+    setHistoryIndex(commandHistory.length);
+  }
+};
 
 export default function Home() {
   const [input, setInput] = useState('');
-  // Update output state type to handle ReactNode
   const [output, setOutput] = useState<React.ReactNode[]>(initialWelcomeMessages);
   const terminalRef = useRef<HTMLDivElement>(null); // Ref for the terminal div to auto-scroll
   
@@ -39,106 +183,41 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalPdfUrl, setModalPdfUrl] = useState<string | null>(null);
 
-  // Calculate available commands dynamically inside component
-  const availableCommands = Object.values(Command)
-    .filter(cmd => cmd !== Command.Unknown)
-    .join(', ');
+  // State for command history
+  const [commandHistory, setCommandHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState<number>(0);
 
-  // Function to close the modal
-  const closeModal = () => {
+  // Initialize historyIndex correctly when commandHistory changes
+  useEffect(() => {
+     setHistoryIndex(commandHistory.length);
+  }, [commandHistory]);
+
+  // Function to close the modal - Memoized with useCallback
+  const closeModal = useCallback(() => {
     setIsModalOpen(false);
     setModalPdfUrl(null);
-  };
+  }, [setIsModalOpen, setModalPdfUrl]); // Dependencies are stable state setters
 
-  // Function to handle keydown events
+  // Function to handle keydown events - Now uses the helper
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Close modal on Escape or Delete key press
-      if (isModalOpen && (event.key === 'Escape' || event.key === 'Delete')) {
-        closeModal();
-        return; // Prevent further processing if closing modal
-      }
-      
-      // Prevent default for handled keys if modal isn't open
-      if (!isModalOpen && (event.key === 'Enter' || event.key === 'Backspace' || event.key.length === 1)) {
-        event.preventDefault();
-      }
-
-      // Only process terminal input if modal is closed
-      if (!isModalOpen && event.key === 'Enter') {
-        const commandInput = input.trim();
-        let newOutput: React.ReactNode[] = [...output, `> ${commandInput}`];
-
-        // File Execution Logic
-        if (commandInput.startsWith('./')) {
-          const fileName = commandInput.substring(2);
-
-          if (fileName === 'resume.pdf') {
-            newOutput.push("Opening resume.pdf...");
-            setModalPdfUrl('/Si Yong Kim - Software Engineer.pdf'); // Set PDF URL for modal
-            setIsModalOpen(true); // Open the modal
-            // Remove download logic
-          } else {
-            newOutput.push(<span className="text-yellow-500">{`Cannot execute: ${commandInput}`}</span>);
-          }
-        // Regular Command Logic
-        } else {
-          const commandParts = commandInput.split(' ').filter(part => part !== '');
-          const baseCommand = commandParts[0]?.toLowerCase() || '';
-          const args = commandParts.slice(1);
-
-          let command: Command;
-          if (Object.values(Command).includes(baseCommand as Command)) {
-            command = baseCommand as Command;
-          } else {
-            command = Command.Unknown;
-          }
-
-          switch (command) {
-            case Command.Help:
-              newOutput.push(`Available commands: ${availableCommands}`);
-              break;
-            case Command.Clear:
-              newOutput = initialWelcomeMessages;
-              break;
-            case Command.Ls:
-              const showHidden = args.includes('-a');
-              let filesToList = [...files.visible];
-              if (showHidden) {
-                filesToList = [...files.hidden, ...files.visible];
-              }
-              const fileListElement = (
-                <div className="flex flex-wrap gap-x-4">
-                  {filesToList.map(file => (
-                    <span
-                      key={file.name}
-                      className={file.isExecutable ? 'text-red-500' : ''}
-                    >
-                      {file.name}
-                    </span>
-                  ))}
-                </div>
-              );
-              newOutput.push(fileListElement);
-              break;
-            case Command.Unknown:
-              if (commandInput !== '') {
-                newOutput.push(<span className="text-yellow-500">{`Invalid command: '${commandInput}'`}</span>);
-                newOutput.push(`Available commands: ${availableCommands}`);
-              }
-              break;
-          }
-        }
-
-        setOutput(newOutput);
-        setInput('');
-
-      // Only process Backspace/typing if modal is closed
-      } else if (!isModalOpen && event.key === 'Backspace') {
-        setInput((prevInput) => prevInput.slice(0, -1));
-      } else if (!isModalOpen && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
-        setInput((prevInput) => prevInput + event.key);
-      }
+      // Call the extracted logic function
+      handleKeyDownLogic(
+        event,
+        isModalOpen,
+        closeModal,
+        input,
+        output,
+        initialWelcomeMessages,
+        commandHistory,
+        historyIndex,
+        setInput,
+        setOutput,
+        setIsModalOpen,
+        setModalPdfUrl,
+        setCommandHistory,
+        setHistoryIndex
+      );
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -146,7 +225,20 @@ export default function Home() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [input, output, availableCommands, isModalOpen]);
+    // Add all dependencies used by handleKeyDownLogic that come from the component scope
+  }, [
+    input, 
+    output, 
+    isModalOpen, 
+    closeModal, // Now stable due to useCallback
+    initialWelcomeMessages, // Add if it's dynamic (though likely constant)
+    // State setters (setInput, etc.) are generally stable and don't need to be dependencies
+    // Include setters used directly in the effect if any, or indirectly via non-memoized callbacks
+    // Since closeModal uses setters and is memoized, we list closeModal itself.
+    setInput, setOutput, setIsModalOpen, setModalPdfUrl,
+    commandHistory, historyIndex,
+    setCommandHistory, setHistoryIndex
+  ]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -156,56 +248,42 @@ export default function Home() {
   }, [output]); // Scroll whenever output changes
 
   return (
-    // Wrap everything in a fragment to allow adjacent elements (terminal and modal)
     <>
-      <div className="flex items-center justify-center min-h-screen bg-gray-900 p-4">
-        {/* Terminal Window */}
-        <div
-          ref={terminalRef}
-          className="w-full max-w-4xl h-[80vh] bg-black text-green-400 font-mono text-sm rounded-lg shadow-lg p-4 overflow-y-auto focus:outline-none cursor-text leading-normal"
-          tabIndex={0}
-        >
-          {output.map((line, index) => (
-            // Render the node directly if it's an object (JSX), or wrap primitives in <p>
-            React.isValidElement(line) ? (
+      {/* Darkest Gruvbox background for the page */}
+      <div className="flex items-center justify-center min-h-screen bg-[#1d2021] p-4">
+        {/* Main Terminal Container */}
+        {/* Standard Gruvbox dark background for terminal container */}
+        <div className="w-full max-w-4xl h-[80vh] rounded-lg shadow-lg bg-[#282828] flex flex-col overflow-hidden">
+          {/* Use the WindowBar component (styled separately) */}
+          <WindowBar />
+
+          {/* Terminal Content Area - Standard Gruvbox dark theme */}
+          <div
+            ref={terminalRef}
+            // Standard Gruvbox dark bg, keeping fg same for contrast
+            className="flex-grow bg-[#282828] text-[#ebdbb2] font-mono text-sm p-4 overflow-y-auto focus:outline-none cursor-text leading-normal rounded-b-lg"
+            tabIndex={0}
+          >
+            {/* Render the output nodes directly */}
+            {output.map((line, index) => (
                 <React.Fragment key={index}>{line}</React.Fragment>
-            ) : (
-                <p key={index}>{line}</p>
-            )
-          ))}
-          {/* Ensure input line is always a <p> for consistent styling */}
-          <p>
-            <span>&gt; </span>
-            <span className="whitespace-pre">{input}</span>
-            <span className="relative top-0.5 w-[8px] h-[1em] bg-green-400 inline-block cursor-blink"></span>
-          </p>
+            ))}
+            <p>
+              <span>&gt; </span>
+              <span className="whitespace-pre">{input}</span>
+              {/* Gruvbox cursor color */}
+              <span className="relative top-0.5 w-[8px] h-[1em] bg-[#ebdbb2] inline-block cursor-blink"></span>
+            </p>
+           </div>
         </div>
       </div>
 
-      {/* Modal for PDF Viewer */}
-      {isModalOpen && modalPdfUrl && (
-        <div
-          className="fixed inset-0 flex items-center justify-center z-50 p-4 sm:p-8"
-          onClick={closeModal} // Still close on clicking the (now invisible) overlay area
-        >
-          {/* PDF container styling remains the same */}
-          <div
-            className="bg-white rounded-lg shadow-xl w-full max-w-3xl h-[85vh] overflow-hidden flex flex-col"
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal content
-          >
-            {/* PDF Embed */}
-            <div className="flex-grow">
-               <iframe
-                 src={modalPdfUrl}
-                 title="Resume PDF Viewer"
-                 width="100%"
-                 height="100%"
-                 style={{ border: 'none' }}
-               />
-             </div>
-          </div>
-        </div>
-      )}
+      {/* PdfModal component (styling is self-contained) */}
+      <PdfModal
+        isOpen={isModalOpen}
+        pdfUrl={modalPdfUrl}
+        onClose={closeModal}
+      />
     </>
   );
 }
