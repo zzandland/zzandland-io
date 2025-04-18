@@ -327,6 +327,7 @@ export default function Home() {
             className="flex-grow bg-[#282828] text-[#ebdbb2] font-mono text-sm p-4 overflow-y-auto focus:outline-none cursor-text leading-normal rounded-b-lg relative" // Added relative positioning
             tabIndex={-1} // Make it programmatically focusable if needed, but not via tab
             onClick={focusInput} // Focus hidden input on tap/click
+            onTouchStart={focusInput} // Add onTouchStart for mobile devices
           >
             {/* Render the output nodes directly */}
             {output.map((line, index) => (
