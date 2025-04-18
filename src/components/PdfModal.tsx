@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface PdfModalProps {
   isOpen: boolean;
@@ -7,19 +7,22 @@ interface PdfModalProps {
 }
 
 const PdfModal: React.FC<PdfModalProps> = ({ isOpen, pdfUrl, onClose }) => {
-  if (!isOpen || !pdfUrl) {
-    return null; // Don't render anything if not open or no URL
-  }
-
   // Prevent background scroll when modal is open
   React.useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     }
+    // No need for an else block here, cleanup handles resetting
+
+    // Cleanup function to reset overflow when component unmounts or isOpen becomes false
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
-  }, [isOpen]);
+  }, [isOpen]); // Dependency array ensures this runs when isOpen changes
+
+  if (!isOpen || !pdfUrl) {
+    return null; // Don't render anything if not open or no URL
+  }
 
   return (
     <div
@@ -38,7 +41,7 @@ const PdfModal: React.FC<PdfModalProps> = ({ isOpen, pdfUrl, onClose }) => {
             title="Resume PDF Viewer"
             width="100%"
             height="100%"
-            style={{ border: 'none' }}
+            style={{ border: "none" }}
           />
         </div>
       </div>
@@ -46,4 +49,4 @@ const PdfModal: React.FC<PdfModalProps> = ({ isOpen, pdfUrl, onClose }) => {
   );
 };
 
-export default PdfModal; 
+export default PdfModal;
