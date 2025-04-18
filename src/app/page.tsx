@@ -312,11 +312,12 @@ export default function Home() {
     <>
       {/* Darkest Gruvbox background for the page */}
       {/* Adjusted padding and min-height for better mobile view */}
-      <div className="flex items-center justify-center min-h-dvh bg-[#1d2021] p-2 sm:p-4">
+      {/* Changed px-2 py-1 to px-2 py-0 for no vertical padding on mobile */}
+      <div className="flex items-center justify-center min-h-dvh bg-[#1d2021] px-2 py-0 sm:p-4 h-[100dvh]">
         {/* Main Terminal Container */}
         {/* Standard Gruvbox dark background for terminal container */}
         {/* Adjusted height for better mobile view */}
-        <div className="w-full max-w-4xl h-[85vh] sm:h-[80vh] rounded-lg shadow-lg bg-[#282828] flex flex-col overflow-hidden">
+        <div className="w-full max-w-4xl h-[98dvh] md:h-[85dvh] rounded-lg shadow-lg bg-[#282828] flex flex-col overflow-hidden">
           {/* Use the WindowBar component (styled separately) */}
           <WindowBar />
 
@@ -324,7 +325,8 @@ export default function Home() {
           <div
             ref={terminalRef}
             // Standard Gruvbox dark bg, keeping fg same for contrast
-            className="flex-grow bg-[#282828] text-[#ebdbb2] font-mono text-sm p-4 overflow-y-auto focus:outline-none cursor-text leading-normal rounded-b-lg relative" // Added relative positioning
+            // Adjusted padding for mobile: less vertical padding
+            className="flex-grow bg-[#282828] text-[#ebdbb2] font-mono text-sm px-4 py-1 sm:p-4 overflow-y-auto focus:outline-none cursor-text leading-normal rounded-b-lg relative" // Changed p-4 to px-4 py-1 sm:p-4
             tabIndex={-1} // Make it programmatically focusable if needed, but not via tab
             onClick={focusInput} // Focus hidden input on tap/click
             onTouchStart={focusInput} // Add onTouchStart for mobile devices
@@ -346,7 +348,8 @@ export default function Home() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               // Styling to hide it visually but keep it functional
-              className="absolute top-0 left-0 w-0 h-0 p-0 m-0 border-0 opacity-0"
+              // Give it minimal size (1x1) instead of 0x0, keep opacity 0
+              className="absolute top-0 left-0 w-full h-full p-0 m-0 border-0 opacity-0"
               // Auto-capitalize/correct features can be annoying in terminals
               autoCapitalize="none"
               autoComplete="off"
