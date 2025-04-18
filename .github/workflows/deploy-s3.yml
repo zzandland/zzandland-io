@@ -1,0 +1,41 @@
+# .github/workflows/deploy-s3.yml
+name: Deploy Static Site to S3
+
+on:
+  release:
+    types: [created] # Trigger on new release creation
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Required for AWS OIDC
+      contents: read # Required to checkout the code
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20" # Use a specific Node.js version suitable for your project
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build static site
+        run: npm run build # This will generate the static files in the 'out' directory
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_IAM_ROLE_NAME }} # Use secrets for account ID and role name
+          aws-region: us-east-1 # Replace with your desired AWS region
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync ./out s3://${{ secrets.AWS_S3_BUCKET_NAME }} --delete # Use secret for bucket name
+        env:
+          AWS_REGION: us-east-1 # Replace with your desired AWS region
