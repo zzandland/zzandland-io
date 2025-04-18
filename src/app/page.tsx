@@ -150,7 +150,10 @@ const handleKeyDownLogic = (
     !isModalOpen &&
     (event.key === "Enter" ||
       event.key === "Backspace" ||
-      event.key.length === 1)
+      // Remove character keys from preventDefault
+      event.key === "ArrowUp" || // Keep for arrows
+      event.key === "ArrowDown" || // Keep for arrows
+      event.key === "Tab") // Keep for Tab
   ) {
     event.preventDefault();
   }
@@ -200,7 +203,9 @@ const handleKeyDownLogic = (
 
     // Only process Backspace/typing if modal is closed
   } else if (!isModalOpen && event.key === "Backspace") {
+    // Backspace logic remains the same, handled by keydown
     setInput((prevInput) => prevInput.slice(0, -1));
+    event.preventDefault(); // Prevent default backspace navigation
   } else if (
     !isModalOpen &&
     event.key.length === 1 &&
@@ -208,7 +213,6 @@ const handleKeyDownLogic = (
     !event.metaKey &&
     !event.altKey
   ) {
-    setInput((prevInput) => prevInput + event.key);
     // If user types something, reset history index to the end
     setHistoryIndex(commandHistory.length);
   }
@@ -220,6 +224,7 @@ export default function Home() {
     initialWelcomeMessages
   );
   const terminalRef = useRef<HTMLDivElement>(null); // Ref for the terminal div to auto-scroll
+  const hiddenInputRef = useRef<HTMLInputElement>(null); // Ref for the hidden input
 
   // State for modal visibility and PDF URL
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -293,13 +298,25 @@ export default function Home() {
     }
   }, [output]); // Scroll whenever output changes
 
+  // Function to focus the hidden input
+  const focusInput = () => {
+    hiddenInputRef.current?.focus();
+  };
+
+  // Focus the input when the component mounts
+  useEffect(() => {
+    focusInput();
+  }, []); // Empty dependency array ensures this runs only once on mount
+
   return (
     <>
       {/* Darkest Gruvbox background for the page */}
-      <div className="flex items-center justify-center min-h-screen bg-[#1d2021] p-4">
+      {/* Adjusted padding and min-height for better mobile view */}
+      <div className="flex items-center justify-center min-h-dvh bg-[#1d2021] p-2 sm:p-4">
         {/* Main Terminal Container */}
         {/* Standard Gruvbox dark background for terminal container */}
-        <div className="w-full max-w-4xl h-[80vh] rounded-lg shadow-lg bg-[#282828] flex flex-col overflow-hidden">
+        {/* Adjusted height for better mobile view */}
+        <div className="w-full max-w-4xl h-[85vh] sm:h-[80vh] rounded-lg shadow-lg bg-[#282828] flex flex-col overflow-hidden">
           {/* Use the WindowBar component (styled separately) */}
           <WindowBar />
 
@@ -307,8 +324,9 @@ export default function Home() {
           <div
             ref={terminalRef}
             // Standard Gruvbox dark bg, keeping fg same for contrast
-            className="flex-grow bg-[#282828] text-[#ebdbb2] font-mono text-sm p-4 overflow-y-auto focus:outline-none cursor-text leading-normal rounded-b-lg"
-            tabIndex={0}
+            className="flex-grow bg-[#282828] text-[#ebdbb2] font-mono text-sm p-4 overflow-y-auto focus:outline-none cursor-text leading-normal rounded-b-lg relative" // Added relative positioning
+            tabIndex={-1} // Make it programmatically focusable if needed, but not via tab
+            onClick={focusInput} // Focus hidden input on tap/click
           >
             {/* Render the output nodes directly */}
             {output.map((line, index) => (
@@ -320,6 +338,20 @@ export default function Home() {
               {/* Gruvbox cursor color */}
               <span className="relative top-0.5 w-[8px] h-[1em] bg-[#ebdbb2] inline-block cursor-blink"></span>
             </p>
+            {/* Hidden Input for Mobile Keyboard */}
+            <input
+              ref={hiddenInputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              // Styling to hide it visually but keep it functional
+              className="absolute top-0 left-0 w-0 h-0 p-0 m-0 border-0 opacity-0"
+              // Auto-capitalize/correct features can be annoying in terminals
+              autoCapitalize="none"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck="false"
+            />
           </div>
         </div>
       </div>
