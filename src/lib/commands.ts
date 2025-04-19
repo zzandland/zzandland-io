@@ -16,6 +16,7 @@ export const availableCommands = Object.values(Command)
 export const files = {
   visible: [
     { name: "resume.pdf", isExecutable: false },
+    { name: "SDL2-sort.html", isExecutable: false }, // Add the new HTML file
     { name: "project1", isExecutable: true },
     { name: "project2", isExecutable: true },
   ],
@@ -34,7 +35,7 @@ export interface OutputMessage {
 
 // Type for the action returned by processCommand
 export interface CommandAction {
-  type: "openModal";
+  type: "openModal" | "openHtmlModal"; // Add new action type
   url: string;
 }
 
@@ -121,6 +122,27 @@ export const processCommand = (
           newOutputMessages.push({
             type: "error",
             text: "Error: resume.pdf definition not found.",
+          });
+        }
+      } else if (fileNameToOpen === "SDL2-sort.html") {
+        // Handle opening the HTML file
+        const htmlFileExists = [...files.visible, ...files.hidden].some(
+          (f) => f.name === "SDL2-sort.html"
+        );
+        if (htmlFileExists) {
+          newOutputMessages.push({
+            type: "normal",
+            text: "Opening SDL2-sort.html...",
+          });
+          action = {
+            type: "openHtmlModal", // Use the new action type
+            url: "/SDL2-sort.html", // Set the correct URL
+          };
+        } else {
+          // This case should ideally not happen if it's in the files list
+          newOutputMessages.push({
+            type: "error",
+            text: "Error: SDL2-sort.html definition not found.",
           });
         }
       } else {

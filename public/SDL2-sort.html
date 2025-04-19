@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Emscripten-Generated Code</title>
+    <style>
+      body {
+        font-family: arial;
+        margin: 0;
+        padding: none;
+        display: block;
+        height: 100vh;
+        background-color: #333; /* Optional: background color */
+      }
+      .emscripten {
+        padding-right: 0;
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+      }
+      textarea.emscripten {
+        font-family: monospace;
+        width: 80%;
+      }
+      div.emscripten {
+        text-align: center;
+      }
+      div.emscripten_border {
+        border: 1px solid black;
+      }
+      /* Canvas style */
+      canvas.emscripten {
+        border: 0px none;
+        background-color: black; /* Or your preferred background */
+        width: 100%;
+        height: 100%;
+        display: block;
+        margin: auto; /* Center the canvas if body is block */
+      }
+    </style>
+  </head>
+  <body>
+    <canvas
+      class="emscripten"
+      id="canvas"
+      oncontextmenu="event.preventDefault()"
+    ></canvas>
+
+    <script type="text/javascript">
+      var Module = {
+        preRun: [],
+        postRun: [],
+        print: (function () {
+          return function (text) {
+            if (arguments.length > 1)
+              text = Array.prototype.slice.call(arguments).join(" ");
+            console.log(text);
+          };
+        })(),
+        printErr: function (text) {
+          if (arguments.length > 1)
+            text = Array.prototype.slice.call(arguments).join(" ");
+          console.error(text);
+        },
+        canvas: (function () {
+          var canvas = document.getElementById("canvas");
+          canvas.addEventListener(
+            "webglcontextlost",
+            function (e) {
+              alert("WebGL context lost. You will need to reload the page.");
+              e.preventDefault();
+            },
+            false
+          );
+          return canvas;
+        })(),
+        totalDependencies: 0,
+      };
+    </script>
+    <script async type="text/javascript" src="SDL2-sort.js"></script>
+  </body>
+</html>

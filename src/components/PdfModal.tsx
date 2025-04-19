@@ -26,16 +26,18 @@ const PdfModal: React.FC<PdfModalProps> = ({ isOpen, pdfUrl, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center z-50 p-4 sm:p-8" // Re-added padding
+      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 sm:p-8" // Added dark overlay
       onClick={onClose} // Close on clicking the overlay
     >
       {/* PDF container */}
       <div
-        className="bg-white rounded-lg shadow-xl w-full max-w-4xl h-[90vh] overflow-hidden flex flex-col relative" // Re-added max-w-4xl
+        className="bg-[#282828] rounded-lg shadow-xl w-full max-w-4xl h-[90vh] overflow-hidden flex flex-col relative border border-[#928374]" // Use flex-col
         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal content
       >
         {/* PDF Embed */}
-        <div className="flex-grow">
+        <div className="flex-grow bg-white">
+          {" "}
+          {/* Keep iframe background white */}
           <iframe
             src={`${pdfUrl}#view=FitH`} // Append #view=FitH to suggest horizontal fit
             title="Resume PDF Viewer"

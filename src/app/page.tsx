@@ -2,59 +2,63 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import PdfModal from "../components/PdfModal";
+import HtmlModal from "../components/HtmlModal"; // Import the new HtmlModal
 import WindowBar from "../components/WindowBar";
-// Import command processing logic, types, and constants
 import {
+  Command,
   processCommand,
   availableCommands,
+  files,
   OutputMessage,
   CommandResult,
-  files,
 } from "../lib/commands";
 
-// Define initial messages as ReactNodes (paragraphs)
+// Initial welcome messages
 const initialWelcomeMessages: React.ReactNode[] = [
-  <p key="init-1">Welcome to zzandland.io!</p>,
-  <p key="init-2">{`Available commands: ${availableCommands}`}</p>,
+  <p key="welcome-1">Welcome to zzandland.io!</p>,
+  <p key="welcome-2">Type 'help' to see available commands.</p>,
 ];
 
 // Helper function to render OutputMessage to ReactNode
 const renderOutputMessage = (
   message: OutputMessage,
-  index: number
+  key: number | string
 ): React.ReactNode => {
   switch (message.type) {
     case "error":
       return (
-        <p key={index}>
-          <span className="text-[#fb4934]">{message.text}</span>
+        <p key={key} className="text-[#fb4934]">
+          {message.text}
         </p>
       );
     case "warning":
       return (
-        <p key={index}>
-          <span className="text-[#fabd2f]">{message.text}</span>
+        <p key={key} className="text-[#fabd2f]">
+          {message.text}
         </p>
       );
     case "list":
       return (
-        <div key={index} className="flex flex-wrap gap-x-4">
-          {message.items?.map((file) => (
-            <span
-              key={file.name}
-              className={file.isExecutable ? "text-[#8ec07c]" : ""} // Gruvbox Aqua/Green
+        <ul key={key} className="list-none pl-0">
+          {message.items?.map((item, index) => (
+            <li
+              key={index}
+              className={item.isExecutable ? "text-[#b8bb26]" : ""}
             >
-              {file.name}
-              {file.isExecutable ? "*" : ""}
-            </span>
+              {item.name}
+            </li>
           ))}
-        </div>
+        </ul>
       );
-    case "command": // Render command echo
-      return <p key={index}>{message.text}</p>;
+    case "command": // Style for command echo
+      return (
+        <p key={key} className="text-[#83a598]">
+          {message.text}
+        </p>
+      );
     case "normal":
     default:
-      return <p key={index}>{message.text}</p>;
+      return <p key={key}>{message.text}</p>;
   }
 };
 
@@ -62,7 +66,9 @@ const renderOutputMessage = (
 const handleKeyDownLogic = (
   event: KeyboardEvent,
   isModalOpen: boolean,
+  isHtmlModalOpen: boolean, // Add state for HTML modal
   closeModal: () => void,
+  closeHtmlModal: () => void, // Add close function for HTML modal
   input: string,
   output: React.ReactNode[],
   initialMessages: React.ReactNode[],
@@ -72,17 +78,39 @@ const handleKeyDownLogic = (
   setOutput: React.Dispatch<React.SetStateAction<React.ReactNode[]>>,
   setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>,
   setModalPdfUrl: React.Dispatch<React.SetStateAction<string | null>>,
+  setIsHtmlModalOpen: React.Dispatch<React.SetStateAction<boolean>>, // Add setter for HTML modal state
+  setHtmlModalUrl: React.Dispatch<React.SetStateAction<string | null>>, // Add setter for HTML modal URL
   setCommandHistory: React.Dispatch<React.SetStateAction<string[]>>,
   setHistoryIndex: React.Dispatch<React.SetStateAction<number>>
 ) => {
-  // Close modal on Escape or Delete key press
-  if (isModalOpen && (event.key === "Escape" || event.key === "Delete")) {
-    closeModal();
-    return; // Prevent further processing if closing modal
+  // --- Modal Key Handling ---
+  if (isModalOpen || isHtmlModalOpen) {
+    // Close modal on Escape key press
+    if (event.key === "Escape") {
+      if (isModalOpen) closeModal();
+      if (isHtmlModalOpen) closeHtmlModal();
+      event.preventDefault(); // Prevent potential browser default actions for Escape
+      return; // Stop further processing
+    }
+
+    // Allow specific keys for SDL2/HtmlModal iframe
+    if (isHtmlModalOpen) {
+      const allowedKeys = ["1", "2", "3", "4", "z", "x", " "];
+      if (allowedKeys.includes(event.key.toLowerCase())) {
+        // Don't preventDefault or stopPropagation, let the iframe handle it
+        return;
+      }
+    }
+
+    // For any other key press while a modal is open, prevent it from reaching the terminal input
+    event.preventDefault();
+    return;
   }
 
-  // Handle Tab autocompletion *before* preventing default for other keys
-  if (!isModalOpen && event.key === "Tab") {
+  // --- Terminal Key Handling (No modal open) ---
+
+  // Handle Tab autocompletion
+  if (event.key === "Tab") {
     event.preventDefault(); // Prevent default tab behavior (focus change)
 
     const currentInput = input.trimStart(); // Use trimmed input for logic
@@ -119,8 +147,8 @@ const handleKeyDownLogic = (
     return; // Stop further processing for Tab key
   }
 
-  // --- Handle Arrow Key History Navigation ---
-  if (!isModalOpen && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
+  // Handle Arrow Key History Navigation
+  if (event.key === "ArrowUp" || event.key === "ArrowDown") {
     event.preventDefault();
 
     if (commandHistory.length === 0) return; // No history
@@ -145,21 +173,9 @@ const handleKeyDownLogic = (
     return; // Stop further processing for arrow keys
   }
 
-  // Prevent default for other handled keys
-  if (
-    !isModalOpen &&
-    (event.key === "Enter" ||
-      event.key === "Backspace" ||
-      // Remove character keys from preventDefault
-      event.key === "ArrowUp" || // Keep for arrows
-      event.key === "ArrowDown" || // Keep for arrows
-      event.key === "Tab") // Keep for Tab
-  ) {
-    event.preventDefault();
-  }
-
-  // --- Process Enter Key ---
-  if (!isModalOpen && event.key === "Enter") {
+  // Process Enter Key
+  if (event.key === "Enter") {
+    event.preventDefault(); // Prevent default Enter behavior (like form submission)
     const commandInput = input.trim();
 
     // Add to history if it's a non-empty command and not the same as the last one
@@ -188,26 +204,33 @@ const handleKeyDownLogic = (
     } else {
       // Process the output messages into ReactNodes
       const newOutputNodes = result.newOutput.map((msg, index) =>
-        // We need a unique key for rendering, use current output length + index
         renderOutputMessage(msg, output.length + index)
       );
       // Append new nodes to existing output
       setOutput((prevOutput) => [...prevOutput, ...newOutputNodes]);
     }
 
-    // Handle modal action
+    // Handle modal actions
     if (result.action?.type === "openModal" && result.action.url) {
       setModalPdfUrl(result.action.url);
       setIsModalOpen(true);
+    } else if (result.action?.type === "openHtmlModal" && result.action.url) {
+      // Handle HTML modal
+      setHtmlModalUrl(result.action.url);
+      setIsHtmlModalOpen(true);
     }
+    return; // Added return here after processing Enter
+  }
 
-    // Only process Backspace/typing if modal is closed
-  } else if (!isModalOpen && event.key === "Backspace") {
-    // Backspace logic remains the same, handled by keydown
+  // Process Backspace Key
+  if (event.key === "Backspace") {
     setInput((prevInput) => prevInput.slice(0, -1));
     event.preventDefault(); // Prevent default backspace navigation
-  } else if (
-    !isModalOpen &&
+    return; // Added return here after processing Backspace
+  }
+
+  // Handle regular character input
+  if (
     event.key.length === 1 &&
     !event.ctrlKey &&
     !event.metaKey &&
@@ -215,6 +238,17 @@ const handleKeyDownLogic = (
   ) {
     // If user types something, reset history index to the end
     setHistoryIndex(commandHistory.length);
+    // Let the default input handling occur for typing characters by *not* calling preventDefault()
+    // and *not* returning early. The hidden input's onChange will handle state update.
+  } else if (
+    !["Shift", "Control", "Alt", "Meta", "CapsLock", "Tab", "Escape"].includes(
+      event.key
+    )
+  ) {
+    // Prevent default for other non-character keys we haven't explicitly handled
+    // to avoid unexpected browser behavior (like scrolling with arrow keys if history nav fails)
+    // This might need adjustment based on desired behavior for keys like Home, End, etc.
+    event.preventDefault();
   }
 };
 
@@ -223,36 +257,47 @@ export default function Home() {
   const [output, setOutput] = useState<React.ReactNode[]>(
     initialWelcomeMessages
   );
-  const terminalRef = useRef<HTMLDivElement>(null); // Ref for the terminal div to auto-scroll
-  const hiddenInputRef = useRef<HTMLInputElement>(null); // Ref for the hidden input
+  const terminalRef = useRef<HTMLDivElement>(null);
+  const hiddenInputRef = useRef<HTMLInputElement>(null);
 
-  // State for modal visibility and PDF URL
+  // State for PDF modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalPdfUrl, setModalPdfUrl] = useState<string | null>(null);
+
+  // State for HTML modal
+  const [isHtmlModalOpen, setIsHtmlModalOpen] = useState(false);
+  const [htmlModalUrl, setHtmlModalUrl] = useState<string | null>(null);
 
   // State for command history
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(0);
 
-  // Initialize historyIndex correctly when commandHistory changes
+  // Update history index when command history changes
   useEffect(() => {
     setHistoryIndex(commandHistory.length);
   }, [commandHistory]);
 
-  // Function to close the modal - Memoized with useCallback
+  // Function to close the PDF modal - Memoized
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
     setModalPdfUrl(null);
-  }, [setIsModalOpen, setModalPdfUrl]); // Dependencies are stable state setters
+  }, [setIsModalOpen, setModalPdfUrl]);
+
+  // Function to close the HTML modal - Memoized
+  const closeHtmlModal = useCallback(() => {
+    setIsHtmlModalOpen(false);
+    setHtmlModalUrl(null);
+  }, [setIsHtmlModalOpen, setHtmlModalUrl]);
 
   // Function to handle keydown events - Now uses the helper
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Call the extracted logic function
       handleKeyDownLogic(
         event,
         isModalOpen,
+        isHtmlModalOpen, // Pass HTML modal state
         closeModal,
+        closeHtmlModal, // Pass HTML modal close function
         input,
         output,
         initialWelcomeMessages,
@@ -262,6 +307,8 @@ export default function Home() {
         setOutput,
         setIsModalOpen,
         setModalPdfUrl,
+        setIsHtmlModalOpen, // Pass HTML modal setter
+        setHtmlModalUrl, // Pass HTML modal URL setter
         setCommandHistory,
         setHistoryIndex
       );
@@ -272,85 +319,77 @@ export default function Home() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-    // Add all dependencies used by handleKeyDownLogic that come from the component scope
   }, [
     input,
     output,
     isModalOpen,
-    closeModal, // Now stable due to useCallback
-    // State setters (setInput, etc.) are generally stable and don't need to be dependencies
-    // Include setters used directly in the effect if any, or indirectly via non-memoized callbacks
-    // Since closeModal uses setters and is memoized, we list closeModal itself.
+    isHtmlModalOpen, // Add dependency
+    closeModal,
+    closeHtmlModal, // Add dependency
     setInput,
     setOutput,
     setIsModalOpen,
     setModalPdfUrl,
+    setIsHtmlModalOpen, // Add dependency
+    setHtmlModalUrl, // Add dependency
     commandHistory,
     historyIndex,
     setCommandHistory,
     setHistoryIndex,
+    initialWelcomeMessages, // Added missing dependency
   ]);
 
-  // Auto-scroll to bottom
+  // Auto-scroll terminal to bottom
   useEffect(() => {
     if (terminalRef.current) {
       terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
     }
   }, [output]); // Scroll whenever output changes
 
-  // Function to focus the hidden input
+  // Focus hidden input on mount and click
   const focusInput = () => {
     hiddenInputRef.current?.focus();
   };
 
-  // Focus the input when the component mounts
   useEffect(() => {
     focusInput();
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, []);
 
   return (
     <>
-      {/* Darkest Gruvbox background for the page */}
-      {/* Adjusted padding and min-height for better mobile view */}
-      {/* Changed px-2 py-1 to px-2 py-0 for no vertical padding on mobile */}
       <div className="flex items-center justify-center min-h-dvh bg-[#1d2021] px-2 py-0 sm:p-4 h-[100dvh]">
-        {/* Main Terminal Container */}
-        {/* Standard Gruvbox dark background for terminal container */}
-        {/* Adjusted height for better mobile view */}
         <div className="w-full max-w-4xl h-[98dvh] md:h-[85dvh] rounded-lg shadow-lg bg-[#282828] flex flex-col overflow-hidden">
-          {/* Use the WindowBar component (styled separately) */}
           <WindowBar />
-
-          {/* Terminal Content Area - Standard Gruvbox dark theme */}
           <div
             ref={terminalRef}
-            // Standard Gruvbox dark bg, keeping fg same for contrast
-            // Adjusted padding for mobile: less vertical padding
-            className="flex-grow bg-[#282828] text-[#ebdbb2] font-mono text-sm px-4 py-1 sm:p-4 overflow-y-auto focus:outline-none cursor-text leading-normal rounded-b-lg relative" // Changed p-4 to px-4 py-1 sm:p-4
-            tabIndex={-1} // Make it programmatically focusable if needed, but not via tab
-            onClick={focusInput} // Focus hidden input on tap/click
-            onTouchStart={focusInput} // Add onTouchStart for mobile devices
+            className="flex-grow bg-[#282828] text-[#ebdbb2] font-mono text-sm px-4 py-1 sm:p-4 overflow-y-auto focus:outline-none cursor-text leading-normal rounded-b-lg relative"
+            tabIndex={-1}
+            onClick={focusInput}
+            onTouchStart={focusInput} // Added for mobile touch focus
           >
-            {/* Render the output nodes directly */}
             {output.map((line, index) => (
               <React.Fragment key={index}>{line}</React.Fragment>
             ))}
             <p>
               <span>&gt; </span>
               <span className="whitespace-pre">{input}</span>
-              {/* Gruvbox cursor color */}
+              {/* Only show cursor when input is focused (implicitly via hidden input) */}
               <span className="relative top-0.5 w-[8px] h-[1em] bg-[#ebdbb2] inline-block cursor-blink"></span>
             </p>
-            {/* Hidden Input for Mobile Keyboard */}
+            {/* Hidden input to capture keyboard events */}
             <input
               ref={hiddenInputRef}
               type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              // Styling to hide it visually but keep it functional
-              // Give it minimal size (1x1) instead of 0x0, keep opacity 0
-              className="absolute top-0 left-0 w-full h-full p-0 m-0 border-0 opacity-0"
-              // Auto-capitalize/correct features can be annoying in terminals
+              onChange={(e) => setInput(e.target.value)} // Update input state on change
+              onBlur={(e) => {
+                // Attempt to refocus on blur unless a modal is open
+                if (!isModalOpen && !isHtmlModalOpen) {
+                  // Delay refocus slightly to allow modal opening logic to run
+                  setTimeout(() => focusInput(), 0);
+                }
+              }}
+              className="absolute top-0 left-0 w-full h-full p-0 m-0 border-0 opacity-0 cursor-default"
               autoCapitalize="none"
               autoComplete="off"
               autoCorrect="off"
@@ -360,11 +399,18 @@ export default function Home() {
         </div>
       </div>
 
-      {/* PdfModal component (styling is self-contained) */}
+      {/* PdfModal component */}
       <PdfModal
         isOpen={isModalOpen}
         pdfUrl={modalPdfUrl}
         onClose={closeModal}
+      />
+
+      {/* HtmlModal component */}
+      <HtmlModal
+        isOpen={isHtmlModalOpen}
+        htmlUrl={htmlModalUrl}
+        onClose={closeHtmlModal}
       />
     </>
   );
