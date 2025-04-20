@@ -39,12 +39,6 @@ const Modal: React.FC<ModalProps> = ({
       <div
         className={`bg-[#282828] rounded-lg shadow-xl ${widthClass} ${heightClass} overflow-hidden flex flex-col relative border border-[#928374] focus:outline-none`}
         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal content
-        // Add onKeyDown here to catch Escape if focus somehow lands on the container
-        onKeyDown={(e) => {
-          if (e.key === "Escape") {
-            onClose();
-          }
-        }}
         // Make the container programmatically focusable if needed as a fallback, but don't auto-focus it.
         tabIndex={-1}
       >
@@ -60,11 +54,9 @@ const Modal: React.FC<ModalProps> = ({
           </button>
         </div>
         {/* Content Area */}
-        <div className="flex-grow bg-white overflow-auto">
-          {" "}
-          {/* Ensure content area can scroll if needed */}
-          {children}
-        </div>
+        <div className="flex-grow bg-white overflow-auto">{children}</div>
+        {/* Footer Area */}
+        <div className="bg-[#3c3836] h-4 flex-shrink-0 rounded-b-lg"></div>
       </div>
     </div>
   );
