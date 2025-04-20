@@ -28,14 +28,14 @@ export const files = {
 
 // Type for structured output message
 export interface OutputMessage {
-  type: "normal" | "error" | "warning" | "list" | "command"; // Added 'command' type
+  type: "normal" | "error" | "warning" | "list" | "command";
   text?: string;
   items?: { name: string; isExecutable: boolean }[];
 }
 
 // Type for the action returned by processCommand
 export interface CommandAction {
-  type: "openModal" | "openHtmlModal"; // Add new action type
+  type: "openModal";
   url: string;
 }
 
@@ -47,10 +47,7 @@ export interface CommandResult {
 }
 
 // Helper function to process commands
-export const processCommand = (
-  commandInput: string
-  // currentOutput no longer needed, we build the new output from scratch based on command
-): CommandResult => {
+export const processCommand = (commandInput: string): CommandResult => {
   // Start with the command echo
   let newOutputMessages: OutputMessage[] = [
     { type: "command", text: `> ${commandInput}` },
@@ -59,7 +56,7 @@ export const processCommand = (
   let shouldClear = false;
 
   const commandParts = commandInput.split(" ").filter((part) => part !== "");
-  const baseCommand = commandParts[0]?.toLowerCase() || "";
+  const baseCommand = commandParts[0]?.toLowerCase() ?? "";
   const args = commandParts.slice(1);
 
   let command: Command;
@@ -135,14 +132,13 @@ export const processCommand = (
             text: "Opening SDL2-sort.html...",
           });
           action = {
-            type: "openHtmlModal", // Use the new action type
-            url: "/SDL2-sort.html", // Set the correct URL
+            type: "openModal",
+            url: "/SDL2-sort.html",
           };
         } else {
-          // This case should ideally not happen if it's in the files list
           newOutputMessages.push({
             type: "error",
-            text: "Error: SDL2-sort.html definition not found.",
+            text: "Error: SDL2-sort.html not found.",
           });
         }
       } else {

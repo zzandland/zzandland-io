@@ -1,8 +1,7 @@
-"use client"; // Mark this component as a Client Component
+"use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import PdfModal from "../components/PdfModal";
-import HtmlModal from "../components/HtmlModal"; // Import the new HtmlModal
+import IframeModal from "../components/IframeModal";
 import WindowBar from "../components/WindowBar";
 import {
   processCommand,
@@ -49,7 +48,7 @@ const renderOutputMessage = (
           ))}
         </ul>
       );
-    case "command": // Style for command echo
+    case "command":
       return (
         <p key={key} className="text-[#83a598]">
           {message.text}
@@ -64,10 +63,6 @@ const renderOutputMessage = (
 // Helper function to handle keydown events
 const handleKeyDownLogic = (
   event: KeyboardEvent,
-  isModalOpen: boolean,
-  isHtmlModalOpen: boolean, // Add state for HTML modal
-  closeModal: () => void,
-  closeHtmlModal: () => void, // Add close function for HTML modal
   input: string,
   output: React.ReactNode[],
   initialMessages: React.ReactNode[],
@@ -76,38 +71,10 @@ const handleKeyDownLogic = (
   setInput: React.Dispatch<React.SetStateAction<string>>,
   setOutput: React.Dispatch<React.SetStateAction<React.ReactNode[]>>,
   setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>,
-  setModalPdfUrl: React.Dispatch<React.SetStateAction<string | null>>,
-  setIsHtmlModalOpen: React.Dispatch<React.SetStateAction<boolean>>, // Add setter for HTML modal state
-  setHtmlModalUrl: React.Dispatch<React.SetStateAction<string | null>>, // Add setter for HTML modal URL
+  setModalUrl: React.Dispatch<React.SetStateAction<string | null>>,
   setCommandHistory: React.Dispatch<React.SetStateAction<string[]>>,
   setHistoryIndex: React.Dispatch<React.SetStateAction<number>>
 ) => {
-  // --- Modal Key Handling ---
-  if (isModalOpen || isHtmlModalOpen) {
-    // Close modal on Escape key press
-    if (event.key === "Escape") {
-      if (isModalOpen) closeModal();
-      if (isHtmlModalOpen) closeHtmlModal();
-      event.preventDefault(); // Prevent potential browser default actions for Escape
-      return; // Stop further processing
-    }
-
-    // Allow specific keys for SDL2/HtmlModal iframe
-    if (isHtmlModalOpen) {
-      const allowedKeys = ["1", "2", "3", "4", "z", "x", " "];
-      if (allowedKeys.includes(event.key.toLowerCase())) {
-        // Don't preventDefault or stopPropagation, let the iframe handle it
-        return;
-      }
-    }
-
-    // For any other key press while a modal is open, prevent it from reaching the terminal input
-    event.preventDefault();
-    return;
-  }
-
-  // --- Terminal Key Handling (No modal open) ---
-
   // Handle Tab autocompletion
   if (event.key === "Tab") {
     event.preventDefault(); // Prevent default tab behavior (focus change)
@@ -141,9 +108,7 @@ const handleKeyDownLogic = (
       }
       // TODO: Handle multiple matches
     }
-    // Add more clauses here for other commands needing completion
-
-    return; // Stop further processing for Tab key
+    return;
   }
 
   // Handle Arrow Key History Navigation
@@ -211,12 +176,8 @@ const handleKeyDownLogic = (
 
     // Handle modal actions
     if (result.action?.type === "openModal" && result.action.url) {
-      setModalPdfUrl(result.action.url);
+      setModalUrl(result.action.url);
       setIsModalOpen(true);
-    } else if (result.action?.type === "openHtmlModal" && result.action.url) {
-      // Handle HTML modal
-      setHtmlModalUrl(result.action.url);
-      setIsHtmlModalOpen(true);
     }
     return; // Added return here after processing Enter
   }
@@ -259,13 +220,9 @@ export default function Home() {
   const terminalRef = useRef<HTMLDivElement>(null);
   const hiddenInputRef = useRef<HTMLInputElement>(null);
 
-  // State for PDF modal
+  // State for modal
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalPdfUrl, setModalPdfUrl] = useState<string | null>(null);
-
-  // State for HTML modal
-  const [isHtmlModalOpen, setIsHtmlModalOpen] = useState(false);
-  const [htmlModalUrl, setHtmlModalUrl] = useState<string | null>(null);
+  const [modalUrl, setModalUrl] = useState<string | null>(null); // Renamed state variable and setter
 
   // State for command history
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
@@ -276,27 +233,19 @@ export default function Home() {
     setHistoryIndex(commandHistory.length);
   }, [commandHistory]);
 
-  // Function to close the PDF modal - Memoized
+  // Function to close the modal - Memoized
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
-    setModalPdfUrl(null);
-  }, [setIsModalOpen, setModalPdfUrl]);
+    setModalUrl(null);
+    // Ensure focus returns to the input after closing the modal
+    setTimeout(() => hiddenInputRef.current?.focus(), 0);
+  }, [setIsModalOpen, setModalUrl]);
 
-  // Function to close the HTML modal - Memoized
-  const closeHtmlModal = useCallback(() => {
-    setIsHtmlModalOpen(false);
-    setHtmlModalUrl(null);
-  }, [setIsHtmlModalOpen, setHtmlModalUrl]);
-
-  // Function to handle keydown events - Now uses the helper
+  // Function to handle keydown events
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       handleKeyDownLogic(
         event,
-        isModalOpen,
-        isHtmlModalOpen, // Pass HTML modal state
-        closeModal,
-        closeHtmlModal, // Pass HTML modal close function
         input,
         output,
         initialWelcomeMessages,
@@ -305,9 +254,7 @@ export default function Home() {
         setInput,
         setOutput,
         setIsModalOpen,
-        setModalPdfUrl,
-        setIsHtmlModalOpen, // Pass HTML modal setter
-        setHtmlModalUrl, // Pass HTML modal URL setter
+        setModalUrl,
         setCommandHistory,
         setHistoryIndex
       );
@@ -321,16 +268,10 @@ export default function Home() {
   }, [
     input,
     output,
-    isModalOpen,
-    isHtmlModalOpen, // Add dependency
-    closeModal,
-    closeHtmlModal, // Add dependency
     setInput,
     setOutput,
     setIsModalOpen,
-    setModalPdfUrl,
-    setIsHtmlModalOpen, // Add dependency
-    setHtmlModalUrl, // Add dependency
+    setModalUrl,
     commandHistory,
     historyIndex,
     setCommandHistory,
@@ -382,7 +323,7 @@ export default function Home() {
               onChange={(e) => setInput(e.target.value)} // Update input state on change
               onBlur={() => {
                 // Attempt to refocus on blur unless a modal is open
-                if (!isModalOpen && !isHtmlModalOpen) {
+                if (!isModalOpen) {
                   // Delay refocus slightly to allow modal opening logic to run
                   setTimeout(() => focusInput(), 0);
                 }
@@ -397,18 +338,11 @@ export default function Home() {
         </div>
       </div>
 
-      {/* PdfModal component */}
-      <PdfModal
-        isOpen={isModalOpen}
-        pdfUrl={modalPdfUrl}
+      {/* IframeModal component */}
+      <IframeModal
+        isOpen={isModalOpen && !!modalUrl} // Only open if modalUrl is set
+        url={modalUrl}
         onClose={closeModal}
-      />
-
-      {/* HtmlModal component */}
-      <HtmlModal
-        isOpen={isHtmlModalOpen}
-        htmlUrl={htmlModalUrl}
-        onClose={closeHtmlModal}
       />
     </>
   );
