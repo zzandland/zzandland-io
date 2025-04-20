@@ -5,7 +5,6 @@ import PdfModal from "../components/PdfModal";
 import HtmlModal from "../components/HtmlModal"; // Import the new HtmlModal
 import WindowBar from "../components/WindowBar";
 import {
-  Command,
   processCommand,
   availableCommands,
   files,
@@ -16,7 +15,7 @@ import {
 // Initial welcome messages
 const initialWelcomeMessages: React.ReactNode[] = [
   <p key="welcome-1">Welcome to zzandland.io!</p>,
-  <p key="welcome-2">Type 'help' to see available commands.</p>,
+  <p key="welcome-2">Type &apos;help&apos; to see available commands.</p>,
 ];
 
 // Helper function to render OutputMessage to ReactNode
@@ -336,7 +335,6 @@ export default function Home() {
     historyIndex,
     setCommandHistory,
     setHistoryIndex,
-    initialWelcomeMessages, // Added missing dependency
   ]);
 
   // Auto-scroll terminal to bottom
@@ -382,7 +380,7 @@ export default function Home() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)} // Update input state on change
-              onBlur={(e) => {
+              onBlur={() => {
                 // Attempt to refocus on blur unless a modal is open
                 if (!isModalOpen && !isHtmlModalOpen) {
                   // Delay refocus slightly to allow modal opening logic to run
