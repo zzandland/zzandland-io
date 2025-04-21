@@ -10,23 +10,24 @@ export enum Command {
 
 export class FileNode {
   name: string;
-  isExecutable: boolean;
-  isDirectory?: boolean;
+  url?: string;
+  isExecutable: boolean = false;
+  isDirectory: boolean = false;
   children: FileNode[];
   parent?: FileNode;
 
   constructor(
     name: string,
-    isExecutable: boolean,
+    url: string = "",
+    isExecutable: boolean = false,
     isDirectory: boolean = false,
-    children: FileNode[] = [],
-    parent?: FileNode
+    children: FileNode[] = []
   ) {
     this.name = name;
+    this.url = url;
     this.isExecutable = isExecutable;
     this.isDirectory = isDirectory;
     this.children = children;
-    this.parent = parent;
     this.children.forEach((child) => (child.parent = this));
   }
 }
@@ -36,12 +37,36 @@ export const availableCommands = Object.values(Command)
   .filter((cmd) => cmd !== Command.Unknown)
   .join(", ");
 
-export const root: FileNode = new FileNode("root", false, true, [
-  new FileNode("about", false, true, [
-    new FileNode("Si Yong Kim - Software Engineer.pdf", true),
+export const root: FileNode = new FileNode("root", "", false, true, [
+  new FileNode("about", "", false, true, [
+    new FileNode("resume", "about/Si Yong Kim - Software Engineer.pdf", true),
   ]),
-  new FileNode("projects", false, true, [new FileNode("SDL2-sort", true)]),
+  new FileNode("projects", "", false, true, [
+    new FileNode("SDL2-sort", "projects/SDL2-sort/SDL2-sort.html", true),
+  ]),
 ]);
+
+// Function to check if a path is valid
+const isValidPath = (path: string, curDir: FileNode) => {
+  const pathParts = path.split("/");
+  let currentNode: FileNode = curDir;
+
+  for (const part of pathParts) {
+    if (part === "" || part === ".") continue; // Skip empty or current directory
+    if (part === "..") {
+      currentNode = currentNode.parent ?? currentNode; // Go up one level
+      continue;
+    }
+
+    const foundNode = currentNode?.children.find((node) => node.name === part);
+    if (!foundNode) {
+      return false; // Path is invalid
+    }
+    currentNode = foundNode;
+  }
+
+  return true; // Path is valid
+};
 
 // Type for structured output message
 export interface OutputMessage {
@@ -85,6 +110,7 @@ export const processCommand = (
   } else {
     command = Command.Unknown;
   }
+  const targetPath = args[0];
 
   switch (command) {
     case Command.Help:
@@ -100,119 +126,185 @@ export const processCommand = (
       newOutputMessages = []; // Or return empty? Let page.tsx handle it.
       break;
     case Command.Ls:
-      const filesToList =
-        curDir.children?.map((node) => ({
-          name: node.isDirectory ? `${node.name}/` : node.name,
-          isExecutable: node.isExecutable,
-        })) ?? [];
+      let currentNode: FileNode = curDir;
+      if (targetPath) {
+        if (!isValidPath(targetPath, curDir)) {
+          newOutputMessages.push({
+            type: "error",
+            text: `cd: no such file or directory: ${targetPath}`,
+          });
+          break;
+        }
+
+        const pathParts = targetPath.split("/");
+
+        for (let i = 0; i < pathParts.length; i++) {
+          const part = pathParts[i];
+          if (part === "" || part === ".") continue; // Skip empty or current directory
+          if (part === "..") {
+            currentNode = currentNode.parent ?? currentNode; // Go up one level
+            continue;
+          }
+
+          const foundNode = currentNode?.children.find(
+            (node) => node.name === part
+          );
+          if (!foundNode) {
+            newOutputMessages.push({
+              type: "error",
+              text: `ls: no such file or directory: ${targetPath}`,
+            });
+            break;
+          }
+          if (i < pathParts.length - 1 && !foundNode.isDirectory) {
+            newOutputMessages.push({
+              type: "error",
+              text: `ls: not a directory: ${part}`,
+            });
+            break;
+          }
+          currentNode = foundNode;
+        }
+      }
+
+      const filesToList = currentNode.isDirectory
+        ? currentNode.children?.map((node) => ({
+            name: node.isDirectory ? `${node.name}/` : node.name,
+            isExecutable: node.isExecutable,
+          }))
+        : [
+            {
+              name: currentNode.name,
+              isExecutable: currentNode.isExecutable,
+            },
+          ];
 
       filesToList.sort((a, b) => a.name.localeCompare(b.name));
 
       newOutputMessages.push({ type: "list", items: filesToList });
       break;
     case Command.Cd:
-      const targetDirName = args[0];
-
-      if (!targetDirName || targetDirName === "/" || targetDirName === "~") {
+      if (!targetPath || targetPath === "/" || targetPath === "~") {
         // 'cd' without args usually goes home, let's go to root
         while (curDir.parent) {
           curDir = curDir.parent;
         }
-      } else if (targetDirName === "..") {
-        // Go up one level
-        if (curDir.parent) {
-          curDir = curDir.parent; // Update curDir to parent
-        }
       } else {
-        // Try to find the target directory within the current directory
-        const targetNode = curDir.children.find(
-          (node) => node.name === targetDirName
-        );
-
-        if (!targetNode) {
-          // Target not found
+        if (!isValidPath(targetPath, curDir)) {
           newOutputMessages.push({
             type: "error",
-            text: `cd: no such file or directory: ${targetDirName}`,
+            text: `cd: no such file or directory: ${targetPath}`,
           });
-        } else {
-          if (targetNode.isDirectory) {
-            curDir = targetNode;
-          } else {
-            // Found something, but it's not a directory
+          break;
+        }
+
+        const pathParts = targetPath.split("/");
+        let currentNode: FileNode = curDir;
+
+        for (const part of pathParts) {
+          if (part === "" || part === ".") continue; // Skip empty or current directory
+          if (part === "..") {
+            currentNode = currentNode.parent ?? currentNode; // Go up one level
+            continue;
+          }
+
+          const foundNode = currentNode?.children.find(
+            (node) => node.name === part
+          );
+          if (!foundNode) {
             newOutputMessages.push({
               type: "error",
-              text: `cd: not a directory: ${targetDirName}`,
+              text: `cd: no such file or directory: ${targetPath}`,
             });
+            break;
           }
+          if (!foundNode.isDirectory) {
+            newOutputMessages.push({
+              type: "error",
+              text: `cd: not a directory: ${part}`,
+            });
+            break;
+          }
+          currentNode = foundNode;
         }
+        curDir = currentNode;
       }
 
-      // If cd failed, newOutputMessages already contains the error
       break;
     case Command.Open:
-      const fileNameToOpen = args[0];
-      if (!fileNameToOpen) {
+      if (!targetPath) {
         newOutputMessages.push({
           type: "warning",
           text: "Usage: open <filename>",
         });
       } else {
-        // Find the file/directory in the *current* directory
-        // Find node within the current directory
-        const fileNode = curDir.children?.find(
-          (node) => node.name === fileNameToOpen
-        );
-
-        if (fileNode) {
-          // Check if opening the resume directly
-          if (fileNode.isExecutable) {
-            newOutputMessages.push({
-              type: "normal",
-              text: `Opening ${fileNode.name}...`,
-            });
-            action = {
-              type: "openModal",
-              url: "/about/Si Yong Kim - Software Engineer.pdf",
-            };
-          }
-          // Check if opening the SDL project directly
-          else if (fileNode.isExecutable && false) {
-            newOutputMessages.push({
-              type: "normal",
-              text: `Opening ${fileNode.name}...`,
-            });
-            action = {
-              type: "openModal",
-              url: "/projects/SDL2-sort/SDL2-sort.html",
-            };
-          }
-          // --- Generic Cases ---
-          else if (fileNode.isDirectory) {
-            newOutputMessages.push({
-              type: "warning",
-              text: `Cannot open directory: ${fileNode.name}. Use 'cd'.`,
-            });
-          } else if (fileNode.isExecutable) {
-            // Handle other potential executable files if added later
-            // For now, assume only the special cases above are directly "openable"
-            newOutputMessages.push({
-              type: "warning",
-              text: `Cannot open this executable file directly: ${fileNode.name}.`,
-            });
-          } else {
-            newOutputMessages.push({
-              type: "warning",
-              text: `Cannot open this file type yet: ${fileNode.name}`,
-            });
-          }
-        } else {
+        if (!isValidPath(targetPath, curDir)) {
           newOutputMessages.push({
             type: "error",
-            text: `Error: File or directory not found: ${fileNameToOpen}`,
+            text: `Error: File or directory not found: ${targetPath}`,
           });
+          break;
+        }
+        // Check if the targetPath is a path
+        const pathParts = targetPath.split("/");
+        let currentNode: FileNode = curDir;
+        for (let i = 0; i < pathParts.length; i++) {
+          const part = pathParts[i];
+          if (part === "" || part === ".") continue; // Skip empty or current directory
+          if (part === "..") {
+            currentNode = currentNode.parent ?? currentNode; // Go up one level
+            continue;
+          }
+          const foundNode = currentNode?.children.find(
+            (node) => node.name === part
+          );
+          if (!foundNode) {
+            newOutputMessages.push({
+              type: "error",
+              text: `Error: File or directory not found: ${targetPath}`,
+            });
+            break;
+          }
+          if (i < pathParts.length - 1) {
+            if (!foundNode.isDirectory) {
+              newOutputMessages.push({
+                type: "error",
+                text: `Error: File or directory not found: ${targetPath}`,
+              });
+              break;
+            }
+            currentNode = foundNode;
+            continue;
+          } else {
+            // Check if the last part is a file
+            if (foundNode.isDirectory) {
+              newOutputMessages.push({
+                type: "warning",
+                text: `Cannot open directory: ${foundNode.name}. Use 'cd'.`,
+              });
+              break;
+            } else if (foundNode.isExecutable) {
+              newOutputMessages.push({
+                type: "normal",
+                text: `Opening ${foundNode.name}...`,
+              });
+              if (foundNode.url) {
+                action = {
+                  type: "openModal",
+                  url: foundNode.url,
+                };
+              }
+            } else {
+              newOutputMessages.push({
+                type: "error",
+                text: `Cannot open file: ${foundNode.name}.`,
+              });
+              break;
+            }
+          }
         }
       }
+
       break;
     case Command.Unknown:
       if (commandInput !== "") {

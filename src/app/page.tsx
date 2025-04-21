@@ -39,10 +39,8 @@ const renderOutputMessage = (message: OutputMessage): React.ReactNode => {
         // Use flexbox to create a multi-column layout
         <div key={key} className="flex flex-wrap gap-x-4 gap-y-1">
           {message.items?.map((item, index) => (
-            <span
-              key={`${key}-${index}`} // Ensure unique keys for list items
-              className={item.isExecutable ? "text-[#b8bb26]" : ""} // Apply color to the span
-            >
+            <span key={`${key}-${index}`}>
+              {/* Ensure unique keys for list items */}
               {item.name}
             </span>
           ))}
