@@ -24,7 +24,6 @@ const IframeModal: React.FC<IframeModalProps> = ({ isOpen, url, onClose }) => {
   return (
     <Modal
       isOpen={isOpen}
-      title={url} // Use url as the title
       onClose={onClose}
       widthClass="w-full md:max-w-screen-md" // Full width on mobile, max-width on larger screens
       heightClass="h-[90vh]" // Override default height

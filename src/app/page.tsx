@@ -6,7 +6,8 @@ import WindowBar from "../components/WindowBar";
 import {
   processCommand,
   availableCommands,
-  files,
+  root,
+  FileNode,
   OutputMessage,
   CommandResult,
 } from "../lib/commands";
@@ -18,10 +19,8 @@ const initialWelcomeMessages: React.ReactNode[] = [
 ];
 
 // Helper function to render OutputMessage to ReactNode
-const renderOutputMessage = (
-  message: OutputMessage,
-  key: number | string
-): React.ReactNode => {
+const renderOutputMessage = (message: OutputMessage): React.ReactNode => {
+  const key = Math.random().toString(36).substring(7); // Generate a pseudo-random key
   switch (message.type) {
     case "error":
       return (
@@ -37,16 +36,17 @@ const renderOutputMessage = (
       );
     case "list":
       return (
-        <ul key={key} className="list-none pl-0">
+        // Use flexbox to create a multi-column layout
+        <div key={key} className="flex flex-wrap gap-x-4 gap-y-1">
           {message.items?.map((item, index) => (
-            <li
-              key={index}
-              className={item.isExecutable ? "text-[#b8bb26]" : ""}
+            <span
+              key={`${key}-${index}`} // Ensure unique keys for list items
+              className={item.isExecutable ? "text-[#b8bb26]" : ""} // Apply color to the span
             >
               {item.name}
-            </li>
+            </span>
           ))}
-        </ul>
+        </div>
       );
     case "command":
       return (
@@ -64,7 +64,6 @@ const renderOutputMessage = (
 const handleKeyDownLogic = (
   event: KeyboardEvent,
   input: string,
-  output: React.ReactNode[],
   initialMessages: React.ReactNode[],
   commandHistory: string[],
   historyIndex: number,
@@ -73,7 +72,9 @@ const handleKeyDownLogic = (
   setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>,
   setModalUrl: React.Dispatch<React.SetStateAction<string | null>>,
   setCommandHistory: React.Dispatch<React.SetStateAction<string[]>>,
-  setHistoryIndex: React.Dispatch<React.SetStateAction<number>>
+  setHistoryIndex: React.Dispatch<React.SetStateAction<number>>,
+  curDir: FileNode,
+  setCurDir: React.Dispatch<React.SetStateAction<FileNode>>
 ) => {
   // Handle Tab autocompletion
   if (event.key === "Tab") {
@@ -98,7 +99,7 @@ const handleKeyDownLogic = (
     } else if (parts.length >= 1 && parts[0] === "open") {
       // Potentially completing a filename for the 'open' command
       const filenamePrefix = parts[1] || ""; // Get prefix or empty string if no second part yet
-      const availableFilenames = files.visible.map((f) => f.name);
+      const availableFilenames = root?.children.map((f) => f.name) ?? [];
       const matchingFiles = availableFilenames.filter((name) =>
         name.startsWith(filenamePrefix)
       );
@@ -158,17 +159,20 @@ const handleKeyDownLogic = (
           : 0)
     );
 
-    const result: CommandResult = processCommand(commandInput);
+    const result: CommandResult = processCommand(commandInput, curDir); // Pass current path
 
     setInput(""); // Clear input after processing
+    if (result.newDir) {
+      setCurDir(result.newDir); // Update current directory if changed
+    }
 
     // Handle clear command
     if (result.clear) {
       setOutput(initialMessages);
     } else {
       // Process the output messages into ReactNodes
-      const newOutputNodes = result.newOutput.map((msg, index) =>
-        renderOutputMessage(msg, output.length + index)
+      const newOutputNodes = result.newOutput.map((msg) =>
+        renderOutputMessage(msg)
       );
       // Append new nodes to existing output
       setOutput((prevOutput) => [...prevOutput, ...newOutputNodes]);
@@ -228,6 +232,9 @@ export default function Home() {
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(0);
 
+  // State for current directory path
+  const [curDir, setCurDir] = useState<FileNode>(root);
+
   // Update history index when command history changes
   useEffect(() => {
     setHistoryIndex(commandHistory.length);
@@ -247,7 +254,6 @@ export default function Home() {
       handleKeyDownLogic(
         event,
         input,
-        output,
         initialWelcomeMessages,
         commandHistory,
         historyIndex,
@@ -256,7 +262,9 @@ export default function Home() {
         setIsModalOpen,
         setModalUrl,
         setCommandHistory,
-        setHistoryIndex
+        setHistoryIndex,
+        curDir,
+        setCurDir
       );
     };
 
@@ -276,6 +284,8 @@ export default function Home() {
     historyIndex,
     setCommandHistory,
     setHistoryIndex,
+    curDir,
+    setCurDir,
   ]);
 
   // Auto-scroll terminal to bottom
@@ -288,6 +298,21 @@ export default function Home() {
   // Focus hidden input on mount and click
   const focusInput = () => {
     hiddenInputRef.current?.focus();
+  };
+
+  // Function to format the path for display
+  const formatPath = (curDir: FileNode): string => {
+    const path: string[] = [];
+    let currentNode: FileNode = curDir;
+    while (currentNode.parent) {
+      path.unshift(currentNode.name); // Prepend the name to the path
+      currentNode = currentNode.parent;
+    }
+
+    if (path.length === 0) {
+      return "~";
+    }
+    return `~/${path.join("/")}`;
   };
 
   useEffect(() => {
@@ -310,6 +335,10 @@ export default function Home() {
               <React.Fragment key={index}>{line}</React.Fragment>
             ))}
             <p>
+              {/* Apply styling to the path - yellowish and bold */}
+              <span className="text-[#fabd2f] font-bold">
+                {formatPath(curDir) + " "}
+              </span>
               <span>&gt; </span>
               <span className="whitespace-pre">{input}</span>
               {/* Only show cursor when input is focused (implicitly via hidden input) */}
