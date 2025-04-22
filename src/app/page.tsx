@@ -4,8 +4,8 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import IframeModal from "../components/IframeModal";
 import WindowBar from "../components/WindowBar";
 import {
+  Command,
   processCommand,
-  availableCommands,
   root,
   FileNode,
   OutputMessage,
@@ -78,36 +78,46 @@ const handleKeyDownLogic = (
   if (event.key === "Tab") {
     event.preventDefault(); // Prevent default tab behavior (focus change)
 
-    const currentInput = input.trimStart(); // Use trimmed input for logic
-    const parts = currentInput.split(" ").filter((part) => part !== "");
+    // Split input into command and the rest (potential path argument)
+    const parts = input.split(" ");
+    const commandName = parts[0];
+    // Join the remaining parts to handle paths potentially containing spaces
+    const pathArgument = parts.slice(1).join(" ");
 
-    // --- Autocompletion Logic ---
-    if (parts.length === 1 && !currentInput.includes(" ")) {
-      // Potentially completing a command
-      const commandPrefix = parts[0];
-      const commandList = availableCommands.split(", ");
-      const matchingCommands = commandList.filter((cmd) =>
-        cmd.startsWith(commandPrefix)
-      );
+    // Split the path argument into segments, filtering out empty strings (e.g., from multiple slashes)
+    const pathSegments = pathArgument.split("/").filter(Boolean);
+    // The part of the name we need to autocomplete is the last segment
+    const nameToComplete = pathSegments.pop() ?? ""; // Use empty string if pathArgument was empty or ended in '/'
 
-      if (matchingCommands.length === 1) {
-        setInput(matchingCommands[0] + " "); // Complete with space
-      }
-      // TODO: Handle multiple matches (e.g., show options or complete common prefix)
-    } else if (parts.length >= 1 && parts[0] === "open") {
-      // Potentially completing a filename for the 'open' command
-      const filenamePrefix = parts[1] || ""; // Get prefix or empty string if no second part yet
-      const availableFilenames = root?.children.map((f) => f.name) ?? [];
-      const matchingFiles = availableFilenames.filter((name) =>
-        name.startsWith(filenamePrefix)
-      );
+    // Determine the directory path to list for completion candidates
+    // If pathSegments is empty, we list from the current directory (represented by '')
+    const directoryToList = pathSegments.join("/");
 
-      if (matchingFiles.length === 1) {
-        setInput(`open ${matchingFiles[0]}`); // Complete with command + filename
-      }
-      // TODO: Handle multiple matches
+    // Simulate 'ls' command on the parent directory to find potential matches
+    // Pass an empty string if directoryToList is empty, otherwise pass the path
+    const lsCommand = directoryToList
+      ? `${Command.Ls} ${directoryToList}`
+      : Command.Ls;
+    const lsResult = processCommand(lsCommand, curDir);
+
+    // Find the 'list' type message in the results, which contains the items
+    const listMessage = lsResult.newOutput.find((msg) => msg.type === "list");
+    const completionCandidates = listMessage?.items ?? []; // Default to empty array if no list message or items
+
+    // Find the first candidate that starts with the nameToComplete
+    // If nameToComplete is empty, this will match the first item alphabetically
+    const completionMatch = completionCandidates.find((item) =>
+      item.name.startsWith(nameToComplete)
+    );
+
+    // If a match is found, reconstruct the path and update the input field
+    if (completionMatch) {
+      // Reconstruct the completed path, including the base directory path and the matched name
+      const completedPath = [...pathSegments, completionMatch.name].join("/");
+      setInput(`${commandName} ${completedPath}`);
     }
-    return;
+
+    return; // Autocompletion handled
   }
 
   // Handle Arrow Key History Navigation
