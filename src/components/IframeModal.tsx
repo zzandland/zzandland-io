@@ -22,19 +22,19 @@ const IframeModal: React.FC<IframeModalProps> = ({ isOpen, url, onClose }) => {
   }
 
   // Determine aspect ratio based on content type (example)
-  const aspectRatio = url.endsWith(".pdf") ? "8.5/11" : "16/9"; // Example: A4/Letter for PDF, 16:9 for others
+  const aspectRatio = url.endsWith(".pdf") ? "9/11" : "16/9"; // Example: A4/Letter for PDF, 16:9 for others
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      widthClass="w-full md:max-w-screen-md" // Full width on mobile, max-width on larger screens
+      widthClass="w-full md:max-w-screen-lg" // Full width on mobile, max-width on larger screens
       aspectRatio={aspectRatio} // Pass aspectRatio instead of heightStyle
     >
       {/* Embed content as children */}
       <iframe
         ref={iframeRef} // Attach ref
-        src={`${url}#view=FitH`} // Append #view=FitH to suggest horizontal fit
+        src={`${url}#view=FitV`} // Append #view=FitV to suggest vertical fit
         width="100%"
         height="100%"
       />
