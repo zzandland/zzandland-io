@@ -5,15 +5,15 @@ interface ModalProps {
   onClose: () => void;
   children: React.ReactNode; // To render specific content (iframe, etc.)
   widthClass?: string; // Optional width class override
-  heightClass?: string; // Optional height class override
+  aspectRatio?: string;
 }
 
 const Modal: React.FC<ModalProps> = ({
   isOpen,
   onClose,
   children,
-  widthClass = "w-[100%]", // Default width from HtmlModal
-  heightClass = "h-[100%]", // Default height from HtmlModal
+  widthClass = "w-[100%]", // Default width for Modal
+  aspectRatio,
 }) => {
   // Keep effect for background scroll prevention
   useEffect(() => {
@@ -31,16 +31,15 @@ const Modal: React.FC<ModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 sm:p-8" // Dark overlay
+      className="fixed inset-0 flex items-center justify-center z-50 p-4 sm:p-8" // Dark overlay removed, centers the modal box
       onClick={onClose} // Close on clicking the overlay
     >
       <div
-        className={`bg-[#282828] rounded-lg shadow-xl ${widthClass} ${heightClass} overflow-hidden flex flex-col relative border border-[#928374] focus:outline-none`}
+        className={`bg-[#282828] rounded-lg shadow-xl max-h-full ${widthClass} overflow-hidden flex flex-col relative border border-[#928374] focus:outline-none`}
+        style={aspectRatio ? { aspectRatio: aspectRatio } : {}}
         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal content
-        // Make the container programmatically focusable if needed as a fallback, but don't auto-focus it.
         tabIndex={-1}
       >
-        {/* Title Bar */}
         <div className="bg-[#3c3836] text-[#ebdbb2] px-4 py-2 flex justify-start items-center rounded-t-lg flex-shrink-0">
           {" "}
           {/* Changed justify-between to justify-start */}

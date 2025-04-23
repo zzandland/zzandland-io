@@ -1,5 +1,5 @@
-import React, { useRef, useEffect } from "react"; // Import useRef and useEffect
-import Modal from "./Modal"; // Import the common Modal component
+import React, { useRef, useEffect } from "react";
+import Modal from "./Modal";
 
 interface IframeModalProps {
   isOpen: boolean;
@@ -15,18 +15,21 @@ const IframeModal: React.FC<IframeModalProps> = ({ isOpen, url, onClose }) => {
       // Focus the iframe when the modal opens
       setTimeout(() => iframeRef.current?.focus(), 0);
     }
-  }, [isOpen]); // Depend on isOpen
+  }, [isOpen]);
 
   if (!isOpen || !url) {
     return null;
   }
+
+  // Determine aspect ratio based on content type (example)
+  const aspectRatio = url.endsWith(".pdf") ? "8.5/11" : "16/9"; // Example: A4/Letter for PDF, 16:9 for others
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       widthClass="w-full md:max-w-screen-md" // Full width on mobile, max-width on larger screens
-      heightClass="h-[90vh]" // Override default height
+      aspectRatio={aspectRatio} // Pass aspectRatio instead of heightStyle
     >
       {/* Embed content as children */}
       <iframe
