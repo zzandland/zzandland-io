@@ -41,7 +41,7 @@ export default function Home() {
     setIsModalOpen(false);
     setModalUrl(null);
     // Ensure focus returns to the input after closing the modal
-    setTimeout(() => hiddenInputRef.current?.focus(), 0);
+    setTimeout(focusInput, 0);
   }, [setIsModalOpen, setModalUrl]);
 
   // Function to handle keydown events
@@ -76,16 +76,19 @@ export default function Home() {
     curDir, // Keep curDir as dependency for command processing context
   ]);
 
-  // Auto-scroll terminal to bottom
+  // Auto-scroll terminal to bottom using scrollTop
   useEffect(() => {
-    if (terminalRef.current) {
-      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
-    }
-  }, [output]); // Scroll whenever output changes
+    requestAnimationFrame(() => {
+      if (terminalRef.current) {
+        // Ensure it scrolls all the way to the bottom
+        terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+      }
+    });
+  }, [output, input, terminalRef]); // This ensures the terminal scrolls to the bottom
 
   // Focus hidden input on mount and click
   const focusInput = () => {
-    hiddenInputRef.current?.focus();
+    hiddenInputRef.current?.focus({ preventScroll: true });
   };
 
   // Function to format the path for display
@@ -117,7 +120,7 @@ export default function Home() {
             className="flex-grow bg-[#282828] text-[#ebdbb2] font-mono text-sm px-4 py-1 sm:p-4 overflow-y-auto focus:outline-none cursor-text leading-normal rounded-b-lg relative"
             tabIndex={-1}
             onClick={focusInput}
-            onTouchStart={focusInput} // Added for mobile touch focus
+            onTouchStart={focusInput}
           >
             {output.map((line, index) => (
               <React.Fragment key={index}>{line}</React.Fragment>
