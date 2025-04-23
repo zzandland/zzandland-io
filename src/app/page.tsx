@@ -148,7 +148,7 @@ export default function Home() {
                   setTimeout(() => focusInput(), 0);
                 }
               }}
-              className="absolute top-0 left-0 w-full h-full p-0 m-0 border-0 opacity-0 cursor-default"
+              className="w-0 h-0 p-0 m-0 border-0 opacity-0 cursor-default"
               autoCapitalize="none"
               autoComplete="off"
               autoCorrect="off"
