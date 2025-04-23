@@ -101,6 +101,11 @@ export const processCommand = (
   let newOutputMessages: OutputMessage[] = [
     { type: "command", text: `> ${commandInput}` },
   ];
+
+  if (!commandInput) {
+    return { newOutput: newOutputMessages, newDir: curDir };
+  }
+
   let action: CommandAction | undefined = undefined;
   let shouldClear = false;
 
