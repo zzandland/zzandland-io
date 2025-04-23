@@ -166,10 +166,10 @@ export const processCommand = (
         const targetNode = targetPath
           ? resolvePath(targetPath, curDir)
           : curDir;
-        if (!targetNode) {
+        if (!targetNode || !targetNode.isDirectory) {
           newOutputMessages.push({
             type: "error",
-            text: `cd: no such file or directory: ${targetPath}`,
+            text: `cd: no such directory: ${targetPath}`,
           });
           break;
         }

@@ -67,11 +67,20 @@ export const handleKeyDownLogic = (
   if (event.key === "Tab") {
     event.preventDefault(); // Prevent default tab behavior (focus change)
 
+    if (!input) return; // No input to autocomplete
+
     // Split input into command and the rest (potential path argument)
-    const parts = input.split(" ");
-    const commandName = parts[0];
-    // Join the remaining parts to handle paths potentially containing spaces
-    const pathArgument = parts.slice(1).join(" ");
+    const [commandName, pathArgument] = input.split(" ");
+
+    if (!pathArgument) {
+      // check if commandName is a valid command
+      for (const command of Object.values(Command)) {
+        if (command.startsWith(commandName)) {
+          setInput(`${command} `);
+          return;
+        }
+      }
+    }
 
     // Split the path argument into segments, filtering out empty strings (e.g., from multiple slashes)
     const pathSegments = pathArgument.split("/").filter(Boolean);
