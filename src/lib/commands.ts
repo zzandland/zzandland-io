@@ -39,7 +39,11 @@ export const availableCommands = Object.values(Command)
 
 export const root: FileNode = new FileNode("root", "", false, true, [
   new FileNode("about", "", false, true, [
-    new FileNode("resume", "about/Si Yong Kim - Software Engineer.pdf", true),
+    new FileNode(
+      "resume.pdf",
+      "about/Si Yong Kim - Software Engineer.pdf",
+      true
+    ),
   ]),
   new FileNode("projects", "", false, true, [
     new FileNode("SDL2-sort", "projects/SDL2-sort/SDL2-sort.html", true),
