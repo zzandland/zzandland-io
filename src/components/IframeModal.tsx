@@ -34,7 +34,7 @@ const IframeModal: React.FC<IframeModalProps> = ({ isOpen, url, onClose }) => {
       {/* Embed content as children */}
       <iframe
         ref={iframeRef} // Attach ref
-        src={`${url}#view=FitV`} // Append #view=FitV to suggest vertical fit
+        src={`${url}`}
         width="100%"
         height="100%"
       />
