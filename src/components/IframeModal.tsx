@@ -7,6 +7,13 @@ interface IframeModalProps {
   onClose: () => void;
 }
 
+const determineAspectRatio = (url: string): string => {
+  if (url.endsWith(".pdf")) {
+    return "9/11";
+  }
+  return "16/9"; // Default aspect ratio for other content
+};
+
 const IframeModal: React.FC<IframeModalProps> = ({ isOpen, url, onClose }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null); // Ref for the iframe
 
@@ -21,15 +28,12 @@ const IframeModal: React.FC<IframeModalProps> = ({ isOpen, url, onClose }) => {
     return null;
   }
 
-  // Determine aspect ratio based on content type (example)
-  const aspectRatio = url.endsWith(".pdf") ? "9/11" : "16/9"; // Example: A4/Letter for PDF, 16:9 for others
-
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       widthClass="w-full md:max-w-screen-lg" // Full width on mobile, max-width on larger screens
-      aspectRatio={aspectRatio} // Pass aspectRatio instead of heightStyle
+      aspectRatio={determineAspectRatio(url)} // Pass aspectRatio instead of heightStyle
     >
       {/* Embed content as children */}
       <iframe

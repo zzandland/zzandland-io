@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"; // Import useEffect and useRef
+import React, { useEffect, useState } from "react"; // Import useEffect, useState
 
 interface ModalProps {
   isOpen: boolean;
@@ -15,6 +15,18 @@ const Modal: React.FC<ModalProps> = ({
   widthClass = "w-[100%]", // Default width for Modal
   aspectRatio,
 }) => {
+  // Override aspectRatio on mobile viewports
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const currentAspectRatio = isMobile ? "1/1" : aspectRatio;
+
   // Keep effect for background scroll prevention
   useEffect(() => {
     if (isOpen) {
@@ -36,7 +48,7 @@ const Modal: React.FC<ModalProps> = ({
     >
       <div
         className={`bg-[#282828] rounded-lg shadow-xl max-h-full ${widthClass} overflow-hidden flex flex-col relative border border-[#928374] focus:outline-none`}
-        style={aspectRatio ? { aspectRatio: aspectRatio } : {}}
+        style={currentAspectRatio ? { aspectRatio: currentAspectRatio } : {}}
         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal content
         tabIndex={-1}
       >
