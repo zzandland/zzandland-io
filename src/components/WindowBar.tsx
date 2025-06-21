@@ -1,5 +1,4 @@
 import React from "react";
-import Image from "next/image";
 
 const WindowBar: React.FC = () => {
   return (
@@ -14,7 +13,7 @@ const WindowBar: React.FC = () => {
       >
         {/* Standard Red */}
         <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center transition-colors hover:bg-red-600">
-          <Image
+          <img
             src="/svg/github-alt-brands.svg"
             alt="GitHub"
             width={16}
@@ -33,7 +32,7 @@ const WindowBar: React.FC = () => {
       >
         {/* Standard Yellow */}
         <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center transition-colors hover:bg-yellow-600">
-          <Image
+          <img
             src="/svg/snapchat-brands.svg"
             alt="Snapchat"
             width={16}
@@ -52,7 +51,7 @@ const WindowBar: React.FC = () => {
       >
         {/* Standard Green */}
         <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center transition-colors hover:bg-green-600">
-          <Image
+          <img
             src="/svg/linkedin-brands.svg"
             alt="LinkedIn"
             width={16}

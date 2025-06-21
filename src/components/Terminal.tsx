@@ -1,18 +1,16 @@
-"use client";
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import IframeModal from "../components/IframeModal";
-import WindowBar from "../components/WindowBar";
+import IframeModal from "./IframeModal";
+import WindowBar from "./WindowBar";
 import { root, FileNode } from "../lib/commands";
-import { handleKeyDownLogic } from "../lib/handleKeyDown"; // Import the refactored logic from .tsx file
+import { handleKeyDownLogic } from "../lib/handleKeyDown";
 
 // Initial welcome messages
 const initialWelcomeMessages: React.ReactNode[] = [
-  <p key="welcome-1">Welcome to zzandland.io!</p>,
-  <p key="welcome-2">Type &apos;help&apos; to see available commands.</p>,
+  <p key="welcome-1">Welcome to zzanland.io!</p>,
+  <p key="welcome-2">Type 'help' to see available commands.</p>,
 ];
 
-export default function Home() {
+export default function Terminal() {
   const [input, setInput] = useState("");
   const [output, setOutput] = useState<React.ReactNode[]>(
     initialWelcomeMessages
@@ -20,31 +18,24 @@ export default function Home() {
   const terminalRef = useRef<HTMLDivElement>(null);
   const hiddenInputRef = useRef<HTMLInputElement>(null);
 
-  // State for modal
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalUrl, setModalUrl] = useState<string | null>(null); // Renamed state variable and setter
+  const [modalUrl, setModalUrl] = useState<string | null>(null);
 
-  // State for command history
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(0);
 
-  // State for current directory path
   const [curDir, setCurDir] = useState<FileNode>(root);
 
-  // Update history index when command history changes
   useEffect(() => {
     setHistoryIndex(commandHistory.length);
   }, [commandHistory]);
 
-  // Function to close the modal - Memoized
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
     setModalUrl(null);
-    // Ensure focus returns to the input after closing the modal
     setTimeout(focusInput, 0);
-  }, [setIsModalOpen, setModalUrl]);
+  }, []);
 
-  // Function to handle keydown events
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       handleKeyDownLogic(
@@ -69,41 +60,28 @@ export default function Home() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [
-    input,
-    commandHistory, // Keep commandHistory as dependency for history navigation logic
-    historyIndex, // Keep historyIndex as dependency for history navigation logic
-    curDir, // Keep curDir as dependency for command processing context
-  ]);
+  }, [input, commandHistory, historyIndex, curDir]);
 
-  // Auto-scroll terminal to bottom using scrollTop
   useEffect(() => {
     requestAnimationFrame(() => {
       if (terminalRef.current) {
-        // Ensure it scrolls all the way to the bottom
         terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
       }
     });
-  }, [output, input, terminalRef]); // This ensures the terminal scrolls to the bottom
+  }, [output, input, terminalRef]);
 
-  // Focus hidden input on mount and click
   const focusInput = () => {
     hiddenInputRef.current?.focus({ preventScroll: true });
   };
 
-  // Function to format the path for display
-  const formatPath = (curDir: FileNode): string => {
+  const formatPath = (currentDir: FileNode): string => {
     const path: string[] = [];
-    let currentNode: FileNode = curDir;
+    let currentNode: FileNode = currentDir;
     while (currentNode.parent) {
-      path.unshift(currentNode.name); // Prepend the name to the path
+      path.unshift(currentNode.name);
       currentNode = currentNode.parent;
     }
-
-    if (path.length === 0) {
-      return "~";
-    }
-    return `~/${path.join("/")}`;
+    return path.length === 0 ? "~" : `~/${path.join("/")}`;
   };
 
   useEffect(() => {
@@ -112,12 +90,12 @@ export default function Home() {
 
   return (
     <>
-      <div className="flex items-center justify-center min-h-dvh bg-[#1d2021] px-2 py-0 sm:p-4 h-[100dvh]">
-        <div className="w-full max-w-4xl h-[98dvh] md:h-[85dvh] rounded-lg shadow-lg bg-[#282828] flex flex-col overflow-hidden">
+      <div className="flex items-center justify-center min-h-screen bg-[#1d2021] px-2 py-0 sm:p-4 h-[100vh]">
+        <div className="w-full max-w-4xl h-[98vh] sm:h-[85vh] rounded-lg shadow-lg bg-[#282828] flex flex-col overflow-hidden">
           <WindowBar />
           <div
             ref={terminalRef}
-            className="flex-grow bg-[#282828] text-[#ebdbb2] font-mono text-sm px-4 py-1 sm:p-4 overflow-y-auto focus:outline-none cursor-text leading-normal rounded-b-lg relative"
+            className="flex-grow bg-[#282828] text-[#ebdbb2] font-mono text-sm px-4 py-2 sm:p-4 overflow-y-auto focus:outline-none cursor-text leading-normal rounded-b-lg relative"
             tabIndex={-1}
             onClick={focusInput}
             onTouchStart={focusInput}
@@ -126,25 +104,20 @@ export default function Home() {
               <React.Fragment key={index}>{line}</React.Fragment>
             ))}
             <p>
-              {/* Apply styling to the path - yellowish and bold */}
               <span className="text-[#fabd2f] font-bold">
                 {formatPath(curDir) + " "}
               </span>
               <span>&gt; </span>
               <span className="whitespace-pre">{input}</span>
-              {/* Only show cursor when input is focused (implicitly via hidden input) */}
               <span className="relative top-0.5 w-[8px] h-[1em] bg-[#ebdbb2] inline-block cursor-blink"></span>
             </p>
-            {/* Hidden input to capture keyboard events */}
             <input
               ref={hiddenInputRef}
               type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value)} // Update input state on change
+              onChange={(e) => setInput(e.target.value)}
               onBlur={() => {
-                // Attempt to refocus on blur unless a modal is open
                 if (!isModalOpen) {
-                  // Delay refocus slightly to allow modal opening logic to run
                   setTimeout(() => focusInput(), 0);
                 }
               }}
@@ -157,10 +130,8 @@ export default function Home() {
           </div>
         </div>
       </div>
-
-      {/* IframeModal component */}
       <IframeModal
-        isOpen={isModalOpen && !!modalUrl} // Only open if modalUrl is set
+        isOpen={isModalOpen && !!modalUrl}
         url={modalUrl}
         onClose={closeModal}
       />

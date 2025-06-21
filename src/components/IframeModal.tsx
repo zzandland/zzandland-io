@@ -11,7 +11,7 @@ const determineAspectRatio = (url: string): string => {
   if (url.endsWith(".pdf")) {
     return "9/11";
   }
-  return "16/9"; // Default aspect ratio for other content
+  return "16/9";
 };
 
 const IframeModal: React.FC<IframeModalProps> = ({ isOpen, url, onClose }) => {
