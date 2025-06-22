@@ -1,3 +1,5 @@
+import { FileNode, resolvePath } from "./path";
+
 // Define Command Enum
 export enum Command {
   Help = "help",
@@ -8,73 +10,10 @@ export enum Command {
   Unknown = "unknown",
 }
 
-export class FileNode {
-  name: string;
-  url?: string;
-  isExecutable: boolean = false;
-  isDirectory: boolean = false;
-  children: FileNode[];
-  parent?: FileNode;
-
-  constructor(
-    name: string,
-    url: string = "",
-    isExecutable: boolean = false,
-    isDirectory: boolean = false,
-    children: FileNode[] = []
-  ) {
-    this.name = name;
-    this.url = url;
-    this.isExecutable = isExecutable;
-    this.isDirectory = isDirectory;
-    this.children = children;
-    this.children.forEach((child) => (child.parent = this));
-  }
-}
-
 // Calculate available commands string
 export const availableCommands = Object.values(Command)
   .filter((cmd) => cmd !== Command.Unknown)
   .join(", ");
-
-export const root: FileNode = new FileNode("root", "", false, true, [
-  new FileNode("about", "", false, true, [
-    new FileNode(
-      "resume.pdf",
-      "about/Si Yong Kim - Software Engineer.pdf",
-      true
-    ),
-  ]),
-  new FileNode("projects", "", false, true, [
-    new FileNode("SDL2-sort", "projects/SDL2-sort/SDL2-sort.html", true),
-  ]),
-]);
-
-// Function to resolve a path to a FileNode
-const resolvePath = (path: string, curDir: FileNode): FileNode | null => {
-  const pathParts = path.split("/");
-  let currentNode: FileNode = curDir;
-
-  for (const part of pathParts) {
-    if (part === "" || part === ".") continue; // Skip empty or current directory
-    if (part === "..") {
-      // Go up one level, but don't go above root implicitly handled by parent being undefined
-      currentNode = currentNode.parent ?? currentNode;
-      continue;
-    }
-
-    // Find the child node matching the current path part
-    const foundNode = currentNode.children.find((node) => node.name === part);
-    if (!foundNode) {
-      return null; // Path part not found, invalid path
-    }
-    // Move to the found node for the next part
-    currentNode = foundNode;
-  }
-
-  // Return the final node reached after traversing the path
-  return currentNode;
-};
 
 // Type for structured output message
 export interface OutputMessage {

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import IframeModal from "./IframeModal";
 import WindowBar from "./WindowBar";
-import { root, FileNode } from "../lib/commands";
+import { root, formatPath, handleRouteChange } from "../lib/path";
 import { handleKeyDownLogic } from "../lib/handleKeyDown";
 
 // Initial welcome messages
@@ -24,7 +25,23 @@ export default function Terminal() {
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(0);
 
-  const [curDir, setCurDir] = useState<FileNode>(root);
+  const [curDir, setCurDir] = useState(root);
+  const location = useLocation();
+
+  useEffect(() => {
+    const path = location.pathname.substring(1);
+    const result = handleRouteChange(path, root);
+
+    setCurDir(result.newDir);
+
+    if (result.outputMessage) {
+      setOutput((prevOutput) => [...prevOutput, result.outputMessage]);
+    }
+    if (result.isModalOpen && result.modalUrl) {
+      setModalUrl(result.modalUrl);
+      setIsModalOpen(result.isModalOpen);
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     setHistoryIndex(commandHistory.length);
@@ -72,16 +89,6 @@ export default function Terminal() {
 
   const focusInput = () => {
     hiddenInputRef.current?.focus({ preventScroll: true });
-  };
-
-  const formatPath = (currentDir: FileNode): string => {
-    const path: string[] = [];
-    let currentNode: FileNode = currentDir;
-    while (currentNode.parent) {
-      path.unshift(currentNode.name);
-      currentNode = currentNode.parent;
-    }
-    return path.length === 0 ? "~" : `~/${path.join("/")}`;
   };
 
   useEffect(() => {
