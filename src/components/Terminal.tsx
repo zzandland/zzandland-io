@@ -2,16 +2,20 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import IframeModal from "./IframeModal";
 import WindowBar from "./WindowBar";
-import { root, formatPath, handleRouteChange } from "../lib/path";
+import { FileNode, formatPath, handleRouteChange } from "../lib/path";
 import { handleKeyDownLogic } from "../lib/handleKeyDown";
 
 // Initial welcome messages
 const initialWelcomeMessages: React.ReactNode[] = [
-  <p key="welcome-1">Welcome to zzanland.io!</p>,
+  <p key="welcome-1">Welcome to zzandland.io!</p>,
   <p key="welcome-2">Type 'help' to see available commands.</p>,
 ];
 
-export default function Terminal() {
+interface TerminalProps {
+  root: FileNode;
+}
+
+export default function Terminal({ root }: TerminalProps) {
   const [input, setInput] = useState("");
   const [output, setOutput] = useState<React.ReactNode[]>(
     initialWelcomeMessages
