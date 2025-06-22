@@ -3,7 +3,7 @@ export enum Command {
   Help = "help",
   Clear = "clear",
   Ls = "ls",
-  Cd = "cd", // Add Cd command
+  Cd = "cd",
   Open = "open",
   Unknown = "unknown",
 }
@@ -206,10 +206,28 @@ export const processCommand = (
         }
         // Check if the last part is a file
         if (targetNode.isDirectory) {
-          newOutputMessages.push({
-            type: "warning",
-            text: `Cannot open directory: ${targetNode.name}. Use 'cd'.`,
-          });
+          // If it is a directory and it has only one child, and that child is executable, open it.
+          if (
+            targetNode.children.length === 1 &&
+            targetNode.children[0].isExecutable
+          ) {
+            const fileToOpen = targetNode.children[0];
+            newOutputMessages.push({
+              type: "normal",
+              text: `Opening ${fileToOpen.name}...`,
+            });
+            if (fileToOpen.url) {
+              action = {
+                type: "openModal",
+                url: fileToOpen.url,
+              };
+            }
+          } else {
+            newOutputMessages.push({
+              type: "warning",
+              text: `Cannot open directory: ${targetNode.name}. Use 'cd'.`,
+            });
+          }
           break;
         } else if (targetNode.isExecutable) {
           newOutputMessages.push({
