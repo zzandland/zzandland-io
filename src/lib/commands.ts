@@ -1,12 +1,14 @@
 import { FileNode, resolvePath } from "./path";
 
+export type { FileNode };
+
 // Define Command Enum
 export enum Command {
   Help = "help",
   Clear = "clear",
   Ls = "ls",
   Cd = "cd",
-  Open = "open",
+  Open = "",
   Unknown = "unknown",
 }
 
@@ -24,7 +26,7 @@ export interface OutputMessage {
 
 // Type for the action returned by processCommand
 export interface CommandAction {
-  type: "openModal";
+  type: "openModal" | "clear";
   url: string;
 }
 
@@ -37,32 +39,24 @@ export interface CommandResult {
 }
 // Helper function to process commands
 export const processCommand = (
-  commandInput: string,
+  input: string,
   curDir: FileNode
 ): CommandResult => {
   // Start with the command echo
   let newOutputMessages: OutputMessage[] = [
-    { type: "command", text: `> ${commandInput}` },
+    { type: "command", text: `> ${input}` },
   ];
 
-  if (!commandInput) {
+  if (!input) {
     return { newOutput: newOutputMessages, newDir: curDir };
   }
 
   let action: CommandAction | undefined = undefined;
   let shouldClear = false;
 
-  const commandParts = commandInput.split(" ").filter((part) => part !== "");
-  const baseCommand = commandParts[0]?.toLowerCase() ?? "";
-  const args = commandParts.slice(1);
+  const { command, targetPath, execArgs } = parseCommand(input);
 
-  let command: Command;
-  if (Object.values(Command).includes(baseCommand as Command)) {
-    command = baseCommand as Command;
-  } else {
-    command = Command.Unknown;
-  }
-  const targetPath = args[0];
+  const targetNode = resolvePath(targetPath, curDir);
 
   switch (command) {
     case Command.Help:
@@ -80,7 +74,6 @@ export const processCommand = (
       break;
 
     case Command.Ls:
-      const targetNode = targetPath ? resolvePath(targetPath, curDir) : curDir;
       if (!targetNode) {
         newOutputMessages.push({
           type: "error",
@@ -127,65 +120,45 @@ export const processCommand = (
       break;
 
     case Command.Open:
-      if (!targetPath) {
+      if (!targetNode) {
+        newOutputMessages.push({
+          type: "error",
+          text: `Error: File or directory not found: ${targetPath}`,
+        });
+        break;
+      }
+
+      let fileToOpen: FileNode | undefined;
+
+      if (targetNode.isDirectory) {
         newOutputMessages.push({
           type: "warning",
-          text: "Usage: open <filename>",
+          text: `Cannot open directory: ${targetNode.name}. Use 'cd'.`,
         });
-      } else {
-        const targetNode = targetPath
-          ? resolvePath(targetPath, curDir)
-          : curDir;
-        if (!targetNode) {
-          newOutputMessages.push({
-            type: "error",
-            text: `Error: File or directory not found: ${targetPath}`,
-          });
-          break;
+      } else if (targetNode.isExecutable) {
+        fileToOpen = targetNode;
+      }
+
+      if (fileToOpen && fileToOpen.url) {
+        newOutputMessages.push({
+          type: "normal",
+          text: `Opening ${fileToOpen.name}...`,
+        });
+        // Extract additional arguments for the executable
+        let url = fileToOpen.url;
+        if (execArgs.length > 0) {
+          url += `?args=${execArgs.join(" ")}`;
         }
-        // Check if the last part is a file
-        if (targetNode.isDirectory) {
-          // If it is a directory and it has only one child, and that child is executable, open it.
-          if (
-            targetNode.children.length === 1 &&
-            targetNode.children[0].isExecutable
-          ) {
-            const fileToOpen = targetNode.children[0];
-            newOutputMessages.push({
-              type: "normal",
-              text: `Opening ${fileToOpen.name}...`,
-            });
-            if (fileToOpen.url) {
-              action = {
-                type: "openModal",
-                url: fileToOpen.url,
-              };
-            }
-          } else {
-            newOutputMessages.push({
-              type: "warning",
-              text: `Cannot open directory: ${targetNode.name}. Use 'cd'.`,
-            });
-          }
-          break;
-        } else if (targetNode.isExecutable) {
-          newOutputMessages.push({
-            type: "normal",
-            text: `Opening ${targetNode.name}...`,
-          });
-          if (targetNode.url) {
-            action = {
-              type: "openModal",
-              url: targetNode.url,
-            };
-          }
-        } else {
-          newOutputMessages.push({
-            type: "error",
-            text: `Cannot open file: ${targetNode.name}.`,
-          });
-          break;
-        }
+        action = {
+          type: "openModal",
+          url: url,
+        };
+      } else if (!fileToOpen) {
+        // This case handles non-executable files or directories that don't meet the auto-open criteria
+        newOutputMessages.push({
+          type: "error",
+          text: `Cannot open file: ${targetPath}. It is not executable or it's a directory.`,
+        });
       }
       break;
 
@@ -195,7 +168,7 @@ export const processCommand = (
       newOutputMessages.push(
         {
           type: "error",
-          text: `Invalid command: '${commandInput}'`,
+          text: `Invalid command: '${input}'`,
         },
         {
           type: "normal",
@@ -211,4 +184,35 @@ export const processCommand = (
   }
 
   return { newOutput: newOutputMessages, action, newDir: curDir };
+};
+
+interface CommandArgs {
+  command: Command;
+  targetPath: string;
+  execArgs: string[];
+}
+
+// parseCommand parses the input string into a command and its arguments
+export const parseCommand = (input: string): CommandArgs => {
+  // first can be command or targetPath
+  const [first, second, ...rest] = input
+    .split(" ")
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  // if first is a valid command, return the command, targetPath, and execArgs
+  if (Object.values(Command).includes(first as Command)) {
+    return {
+      command: first as Command,
+      targetPath: second ?? "",
+      execArgs: rest ?? [],
+    };
+  } else {
+    // if first is targetPath, return open command, targetPath, and execArgs
+    return {
+      command: Command.Open,
+      targetPath: first,
+      execArgs: [second, ...rest],
+    };
+  }
 };

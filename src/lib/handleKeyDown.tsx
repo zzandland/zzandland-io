@@ -5,7 +5,9 @@ import {
   FileNode,
   OutputMessage,
   CommandResult,
+  parseCommand,
 } from "./commands"; // Assuming commands.ts is in the same lib directory
+import { resolvePath } from "./path";
 
 // Helper function to render OutputMessage to ReactNode (copied from page.tsx for now, consider moving to a shared utils file)
 const renderOutputMessage = (message: OutputMessage): React.ReactNode => {
@@ -65,57 +67,50 @@ export const handleKeyDownLogic = (
 ) => {
   // Handle Tab autocompletion
   if (event.key === "Tab") {
-    event.preventDefault(); // Prevent default tab behavior (focus change)
+    event.preventDefault();
+    if (!input) return;
 
-    if (!input) return; // No input to autocomplete
+    const { command, targetPath } = parseCommand(input);
 
-    // Split input into command and the rest (potential path argument)
-    const [commandName, pathArgument] = input.split(" ");
+    // Split targetPath into directory path and last part
+    const parts = targetPath.split("/");
+    const partToAutocomplete = parts.pop() ?? "";
 
-    if (!pathArgument) {
-      // check if commandName is a valid command
-      for (const command of Object.values(Command)) {
-        if (command.startsWith(commandName)) {
-          setInput(`${command} `);
-          return;
-        }
-      }
+    if (!partToAutocomplete) {
+      return;
     }
 
-    // Split the path argument into segments, filtering out empty strings (e.g., from multiple slashes)
-    const pathSegments = pathArgument.split("/").filter(Boolean);
-    // The part of the name we need to autocomplete is the last segment
-    const nameToComplete = pathSegments.pop() ?? ""; // Use empty string if pathArgument was empty or ended in '/'
+    const directoryPath = parts.join("/");
+    const targetNode = resolvePath(directoryPath, curDir);
 
-    // Determine the directory path to list for completion candidates
-    // If pathSegments is empty, we list from the current directory (represented by '')
-    const directoryToList = pathSegments.join("/");
+    if (!targetNode || !targetNode.isDirectory) {
+      return;
+    }
 
-    // Simulate 'ls' command on the parent directory to find potential matches
-    // Pass an empty string if directoryToList is empty, otherwise pass the path
-    const lsCommand = directoryToList
-      ? `${Command.Ls} ${directoryToList}`
-      : Command.Ls;
-    const lsResult = processCommand(lsCommand, curDir);
-
-    // Find the 'list' type message in the results, which contains the items
-    const listMessage = lsResult.newOutput.find((msg) => msg.type === "list");
-    const completionCandidates = listMessage?.items ?? []; // Default to empty array if no list message or items
-
-    // Find the first candidate that starts with the nameToComplete
-    // If nameToComplete is empty, this will match the first item alphabetically
-    const completionMatch = completionCandidates.find((item) =>
-      item.name.startsWith(nameToComplete)
+    // Find the first child that starts with the partToAutocomplete
+    const completionMatch = targetNode.children?.find((childNode) =>
+      childNode.name.startsWith(partToAutocomplete)
     );
 
-    // If a match is found, reconstruct the path and update the input field
-    if (completionMatch) {
-      // Reconstruct the completed path, including the base directory path and the matched name
-      const completedPath = [...pathSegments, completionMatch.name].join("/");
-      setInput(`${commandName} ${completedPath}`);
+    if (!completionMatch) {
+      return;
     }
 
-    return; // Autocompletion handled
+    // If a match is found, reconstruct the path and update the input field
+    // Reconstruct the completed path, including the base directory path and the matched name
+    const autoCompletedPath = [
+      directoryPath,
+      completionMatch.name + (completionMatch.isDirectory ? "/" : " "),
+    ]
+      .filter(Boolean)
+      .join("/");
+
+    setInput(
+      command === Command.Open
+        ? autoCompletedPath
+        : command + " " + autoCompletedPath
+    );
+    return;
   }
 
   // Handle Arrow Key History Navigation

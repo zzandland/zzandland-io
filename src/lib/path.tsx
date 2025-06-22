@@ -53,7 +53,7 @@ export const root: FileNode = buildFileTree(fileTreeData);
 export const resolvePath = (
   path: string,
   curDir: FileNode
-): FileNode | null => {
+): FileNode | undefined => {
   const pathParts = path.split("/");
   let currentNode: FileNode = curDir;
 
@@ -66,7 +66,7 @@ export const resolvePath = (
 
     const foundNode = currentNode.children.find((node) => node.name === part);
     if (!foundNode) {
-      return null;
+      return undefined;
     }
     currentNode = foundNode;
   }
