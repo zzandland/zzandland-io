@@ -1,0 +1,15 @@
+name: root
+isDirectory: true
+children:
+  - name: about
+    isDirectory: true
+    children:
+      - name: resume.pdf
+        url: /about/Si Yong Kim - Software Engineer.pdf
+        isExecutable: true
+  - name: projects
+    isDirectory: true
+    children:
+      - name: SDL2-sort
+        url: /projects/SDL2-sort/SDL2-sort.html
+        isExecutable: true 

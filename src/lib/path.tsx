@@ -1,4 +1,6 @@
 import React from "react";
+import yaml from "js-yaml";
+import fileTreeYaml from "../data/filetree.yaml?raw";
 
 export class FileNode {
   name: string;
@@ -24,18 +26,29 @@ export class FileNode {
   }
 }
 
-export const root: FileNode = new FileNode("root", "", false, true, [
-  new FileNode("about", "", false, true, [
-    new FileNode(
-      "resume.pdf",
-      "/about/Si Yong Kim - Software Engineer.pdf",
-      true
-    ),
-  ]),
-  new FileNode("projects", "", false, true, [
-    new FileNode("SDL2-sort", "/projects/SDL2-sort/SDL2-sort.html", true),
-  ]),
-]);
+interface FileNodeData {
+  name: string;
+  url?: string;
+  isExecutable?: boolean;
+  isDirectory?: boolean;
+  children?: FileNodeData[];
+}
+
+const buildFileTree = (data: FileNodeData): FileNode => {
+  const children = (data.children || []).map((child) => buildFileTree(child));
+  const node = new FileNode(
+    data.name,
+    data.url,
+    data.isExecutable,
+    data.isDirectory,
+    children
+  );
+  return node;
+};
+
+const fileTreeData = yaml.load(fileTreeYaml) as FileNodeData;
+
+export const root: FileNode = buildFileTree(fileTreeData);
 
 export const resolvePath = (
   path: string,
