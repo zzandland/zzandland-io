@@ -137,8 +137,13 @@ export const handleRouteChange = (
   if (targetNode.isExecutable && targetNode.url) {
     const params = parseParams(rawParams);
     const args = convertQueryParamsToArgs(params);
-    console.log(args);
     return {
+      outputMessage: (
+        <p key="opening-file">
+          Opening {targetNode.name}
+          {args && ` with args: ${args}`}...
+        </p>
+      ),
       newDir: targetNode.parent ?? rootNode,
       modalUrl: targetNode.url + args,
       isModalOpen: true,
