@@ -2,6 +2,24 @@ import React from "react";
 import yaml from "js-yaml";
 import fileTreeYaml from "../data/filetree.yaml?raw";
 
+// parse params from url
+const parseParams = (params: string): string[] => {
+  if (!params) return [];
+  const urlParams = new URLSearchParams(params);
+  const args = [];
+  for (const [key, value] of urlParams.entries()) {
+    args.push(`-${key}`);
+    args.push(value);
+  }
+  return args;
+};
+
+// convert args to query params
+const convertQueryParamsToArgs = (args: string[]): string => {
+  if (args.length === 0) return "";
+  return `?args=${encodeURIComponent(args.join(" "))}`;
+};
+
 export class FileNode {
   name: string;
   url?: string;
@@ -92,7 +110,8 @@ export interface RouteChangeResult {
 
 export const handleRouteChange = (
   path: string,
-  rootNode: FileNode
+  rootNode: FileNode,
+  rawParams: string
 ): RouteChangeResult => {
   if (!path) {
     return { newDir: rootNode };
@@ -116,12 +135,12 @@ export const handleRouteChange = (
   }
 
   if (targetNode.isExecutable && targetNode.url) {
+    const params = parseParams(rawParams);
+    const args = convertQueryParamsToArgs(params);
+    console.log(args);
     return {
       newDir: targetNode.parent ?? rootNode,
-      outputMessage: (
-        <p key="auto-open-message">Opening {targetNode.name}...</p>
-      ),
-      modalUrl: targetNode.url,
+      modalUrl: targetNode.url + args,
       isModalOpen: true,
     };
   }

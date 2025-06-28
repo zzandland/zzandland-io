@@ -14,7 +14,7 @@ export enum Command {
 
 // Calculate available commands string
 export const availableCommands = Object.values(Command)
-  .filter((cmd) => cmd !== Command.Unknown)
+  .filter((cmd) => ![Command.Unknown, Command.Open].includes(cmd))
   .join(", ");
 
 // Type for structured output message

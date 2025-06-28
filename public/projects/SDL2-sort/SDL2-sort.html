@@ -48,7 +48,12 @@
     ></canvas>
 
     <script type="text/javascript">
+      // Parse query parameters from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const args = urlParams.get("args");
+
       var Module = {
+        arguments: args ? args.split(" ") : [],
         preRun: [],
         postRun: [],
         print: (function () {

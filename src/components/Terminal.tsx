@@ -34,7 +34,7 @@ export default function Terminal({ root }: TerminalProps) {
 
   useEffect(() => {
     const path = location.pathname.substring(1);
-    const result = handleRouteChange(path, root);
+    const result = handleRouteChange(path, root, location.search);
 
     setCurDir(result.newDir);
 
@@ -45,7 +45,7 @@ export default function Terminal({ root }: TerminalProps) {
       setModalUrl(result.modalUrl);
       setIsModalOpen(result.isModalOpen);
     }
-  }, [location.pathname]);
+  }, []);
 
   useEffect(() => {
     setHistoryIndex(commandHistory.length);
