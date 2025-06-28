@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build static site
+      - name: Compile TypeScript
         run: npm run build # This will generate the static files in the 'out' directory
 
       - name: Configure AWS Credentials
@@ -36,6 +36,12 @@ jobs:
 
       - name: Deploy to S3
         run: |
-          aws s3 sync ./dist s3://${{ secrets.AWS_S3_BUCKET_NAME }} --delete # Use secret for bucket name
+          aws s3 sync ./dist s3://${{ secrets.AWS_S3_BUCKET_NAME }} --exclude "projects/SDL2-sort/SDL2-sort.js" --exclude "projects/SDL2-sort/SDL2-sort.wasm"
         env:
-          AWS_REGION: us-east-1 # Replace with your desired AWS region
+          AWS_REGION: us-east-1
+
+      - name: Invalidate CloudFront Cache
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+        env:
+          AWS_REGION: us-east-1
