@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Theological Controversies</title>
+<style>
+:root {
+  --bg: #f4efe4;
+  --paper: #fffdf8;
+  --ink: #2a2520;
+  --muted: #6b6155;
+  --rule: #d9cfbd;
+  --accent: #7a2e1d;
+  --accent-soft: #f3e3d8;
+  --callout-bg: #f1ece1;
+  --callout-border: #b39a6b;
+  --tt-bg: #1f2630;
+  --tt-ink: #e9e4d6;
+  --tt-title: #e8c06a;
+  --tt-good: #8fd18a;
+  --tt-bad: #f08f80;
+  --draft-bg: #fff3c4;
+  --draft-border: #c99a14;
+  --draft-ink: #5a4300;
+  --img-bg: #ebe4d4;
+  --img-border: #a8977a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17140f;
+    --paper: #211d17;
+    --ink: #e8e1d3;
+    --muted: #a99d8b;
+    --rule: #3d362b;
+    --accent: #e09a7c;
+    --accent-soft: #3a2721;
+    --callout-bg: #2a251d;
+    --callout-border: #8a7550;
+    --tt-bg: #0f1419;
+    --tt-ink: #e2dccd;
+    --tt-title: #e8c06a;
+    --tt-good: #8fd18a;
+    --tt-bad: #f08f80;
+    --draft-bg: #3a300f;
+    --draft-border: #a07b10;
+    --draft-ink: #f3dc93;
+    --img-bg: #2a251d;
+    --img-border: #6b5d45;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #17140f;
+  --paper: #211d17;
+  --ink: #e8e1d3;
+  --muted: #a99d8b;
+  --rule: #3d362b;
+  --accent: #e09a7c;
+  --accent-soft: #3a2721;
+  --callout-bg: #2a251d;
+  --callout-border: #8a7550;
+  --tt-bg: #0f1419;
+  --tt-ink: #e2dccd;
+  --tt-title: #e8c06a;
+  --tt-good: #8fd18a;
+  --tt-bad: #f08f80;
+  --draft-bg: #3a300f;
+  --draft-border: #a07b10;
+  --draft-ink: #f3dc93;
+  --img-bg: #2a251d;
+  --img-border: #6b5d45;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 17px/1.65 Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+}
+.wrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+article {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 28px 28px 36px;
+}
+@media (max-width: 600px) {
+  article { padding: 20px 16px 28px; }
+  body { font-size: 16px; }
+}
+h1, h2, h3 {
+  font-family: "Trajan Pro", "Cinzel", "Book Antiqua", Georgia, serif;
+  line-height: 1.25;
+  color: var(--accent);
+  font-weight: 700;
+}
+h1 { font-size: 1.9em; margin: 0.2em 0 0.1em; letter-spacing: 0.01em; }
+h2 { font-size: 1.4em; margin: 2em 0 0.5em; padding-bottom: 0.25em; border-bottom: 1px solid var(--rule); }
+h3 { font-size: 1.12em; margin: 1.6em 0 0.4em; }
+.byline { color: var(--muted); font-style: italic; margin: 0 0 1.4em; }
+p { margin: 0 0 1em; }
+a { color: var(--accent); }
+ul, ol { padding-left: 1.4em; margin: 0 0 1em; }
+li { margin: 0.25em 0; }
+strong { color: var(--ink); }
+em.term { font-style: italic; }
+.draft {
+  background: var(--draft-bg);
+  border: 2px dashed var(--draft-border);
+  color: var(--draft-ink);
+  padding: 12px 14px;
+  border-radius: 6px;
+  margin: 0 0 1.4em;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+.draft strong { color: var(--draft-ink); }
+.shot {
+  background: var(--img-bg);
+  border: 2px solid var(--img-border);
+  border-radius: 4px;
+  min-height: 150px;
+  margin: 1.4em 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 18px;
+  color: var(--muted);
+  font-style: italic;
+  font-size: 0.95em;
+}
+.callout {
+  background: var(--callout-bg);
+  border-left: 4px solid var(--callout-border);
+  padding: 12px 16px;
+  margin: 1.2em 0;
+  border-radius: 0 4px 4px 0;
+}
+.callout p:last-child { margin-bottom: 0; }
+.callout .label {
+  display: block;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 0.75em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.tooltip {
+  background: var(--tt-bg);
+  color: var(--tt-ink);
+  border: 1px solid #4a5462;
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin: 1.2em 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 0.88em;
+  line-height: 1.5;
+}
+.tooltip .tt-title { color: var(--tt-title); font-weight: 600; display: block; margin-bottom: 6px; }
+.tooltip .good { color: var(--tt-good); }
+.tooltip .bad { color: var(--tt-bad); }
+.tooltip ul { margin: 0.3em 0 0; }
+blockquote.event {
+  margin: 1.2em 0;
+  padding: 12px 18px;
+  border: 1px solid var(--callout-border);
+  background: var(--callout-bg);
+  border-radius: 4px;
+  font-style: italic;
+}
+blockquote.event .ev-title { display: block; font-style: normal; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+blockquote.event .opt { display: block; font-style: normal; margin-top: 6px; }
+.table-wrap { overflow-x: auto; margin: 1em 0 1.4em; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+th, td { border: 1px solid var(--rule); padding: 6px 10px; text-align: left; vertical-align: top; }
+th { background: var(--accent-soft); font-weight: 600; }
+.signoff { margin-top: 2.2em; font-style: italic; }
+hr { border: 0; border-top: 1px solid var(--rule); margin: 2em 0; }
+.toc { font-size: 0.95em; background: var(--callout-bg); padding: 10px 16px; border-radius: 4px; margin: 0 0 1.6em; }
+.toc ol { margin: 0.3em 0 0; }
+.fig { margin: 1.6em 0; }
+.fig svg { width: 100%; height: auto; display: block; max-width: 560px; margin: 0 auto; }
+.fig .b { fill: var(--paper); stroke: var(--callout-border); stroke-width: 1.5; }
+.fig .hl { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.8; }
+.fig .dim { fill: var(--paper); stroke: var(--rule); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.fig .ln { stroke: var(--muted); stroke-width: 1.6; fill: none; }
+.fig .ln.dash { stroke-dasharray: 5 4; }
+.fig .ah { fill: var(--muted); }
+.fig text { fill: var(--ink); font-family: Georgia, "Book Antiqua", serif; font-size: 16px; font-weight: 700; }
+.fig text.s { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 13px; font-weight: 400; fill: var(--muted); }
+.fig text.lbl { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 13px; font-weight: 600; fill: var(--accent); }
+.fig figcaption { color: var(--muted); font-style: italic; font-size: 0.92em; text-align: center; margin-top: 0.6em; }
+.shotimg { margin: 1.4em 0; }
+.shotimg img { width: 100%; height: auto; display: block; border: 2px solid var(--img-border); border-radius: 4px; }
+.shotimg figcaption { color: var(--muted); font-style: italic; font-size: 0.92em; text-align: center; margin-top: 0.5em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<article>
+
+<div class="draft">
+  <strong>DRAFT, not for publication.</strong> Most of this is in the game on the By God Alone patch branch. Not yet: the emperor's <em>Let the fathers vote again</em> option (in testing), the mainline rite passing to another rite when it refuses a ruling (reviewed, not yet tested), and the calibration games that set the final numbers. All numbers may change. Grey boxes are screenshots still to be taken.
+</div>
+
+<h1>Fallen Eagle Dev Diary - Theological Controversies</h1>
+<p class="byline">How Christian teaching moves in Fallen Eagle, and how it differs from vanilla By God Alone</p>
+
+<div class="toc">
+  <strong>In this diary</strong>
+  <ol>
+    <li>A Church Still Deciding</li>
+    <li>What By God Alone Gives Us</li>
+    <li>Answers as Tenets</li>
+    <li>Questions That Arise and Spread</li>
+    <li>Theological Controversies</li>
+    <li>Imperial Councils</li>
+    <li>Receiving the Ruling</li>
+    <li>When the Mainline Rite Refuses</li>
+    <li>Vanilla and Fallen Eagle Side by Side</li>
+    <li>History and Your Game</li>
+  </ol>
+</div>
+
+<p>Hello everyone! Today the Fallen Eagle team walks you through the whole theology system we have built on top of <em>By God Alone</em>: how a theological answer is stored, how a question arises and spreads, how it hardens into a controversy, and how an emperor's council and the churches of the empire try to settle it. Along the way we'll point out where we use vanilla as it is and where we do something different. Everything here is a work in progress. Let's dig in!</p>
+
+<div class="callout">
+  <span class="label">About the questions in this diary</span>
+  <p>The system currently runs two questions: <strong>The Father and the Son</strong> and <strong>The Holy Spirit</strong>. Their answers, names, starting positions and timings are <strong>placeholders</strong>. They have not yet been researched with historians, and they are there so the machinery has something to work on. We use them below only as examples. Please read this diary as an introduction to the mechanic, not as our account of fourth-century church history. The real questions will be worked out with historians, and they may look quite different.</p>
+</div>
+
+<h2>A Church Still Deciding</h2>
+
+<p>The Christianity of late antiquity was not a finished system. Bishops, emperors and congregations argued over questions with no agreed answer yet, sometimes for generations, and whole churches might accept a council's ruling or ignore it.</p>
+
+<p>That is what we want you to play: not a fixed list of beliefs, but a church still making up its mind, where camps form and an emperor can push but never simply decree.</p>
+
+<h2>What By God Alone Gives Us</h2>
+
+<p>If you've played vanilla 1.20, you'll know most of this. A faith is now made of <strong>rites</strong>: churches within the faith, each with its own teaching. Every tenet has a status in each rite: Core, Permitted, Known or Prohibited. One rite is the <strong>mainline rite</strong>, and every other rite is measured by its <strong>Divergence</strong> from it.</p>
+
+<p>In vanilla, teaching changes in a few ways:</p>
+<ul>
+  <li><strong>Founding a rite</strong> - a qualifying cleric creates a new rite and chooses which tenets and doctrines to raise or lower, paying piety and seeing the resulting Divergence before they commit.</li>
+  <li><strong>Faith-wide rulings</strong> - once a tenet is Known, an Ecumenical Council or the Head of Faith can make it Core, Permitted or Prohibited. In Catholicism the Pope does this with a Papal Bull, which can also declare a rite a Heresy.</li>
+  <li><strong>The papacy</strong> - a newly elected pope can swap a core tenet, and if his rite differs from the mainline, his rite becomes the mainline.</li>
+</ul>
+
+<p>Divergence is where the danger lies. In vanilla 1.20, a rite above 65 Divergence counts as heretical. A council or bull can then name it a Heresy, and its head must submit or leave as a new faith. A rite created above 100 Divergence becomes its own faith on the spot. Over all of it sits the <strong>Christian Church</strong> situation, with seven Chapters driven by catalysts and a Great Schism track between East and West.</p>
+
+<p>All of this is built for 867 and later: a pope in Rome, archbishops hosting councils, a Latin-Greek schism. Fallen Eagle starts five centuries earlier, with no Head of Faith for Christianity and councils summoned by emperors. So we keep vanilla's foundations (rites, tenet statuses, Divergence, personal tenets) and build a different way of changing them on top.</p>
+
+<h2>Answers as Tenets</h2>
+
+<p>The building block is simple. Each theological question has a fixed set of answers, and <strong>every answer is an ordinary tenet</strong>. The Father and the Son currently has four (Pro-Nicene, Homoiousian, Homoian and Anomoean), and The Holy Spirit two (Full Divinity of the Spirit and Pneumatomachian). Because they are ordinary tenets, everything vanilla does with tenets works on them: they show in the faith window, they count toward Divergence, and characters can hold them personally.</p>
+
+<p>A rite holds at most <strong>one answer per question</strong>, as one of its core tenets, and holding no answer at all is allowed. A rite has room for four core tenets, so its answers compete with its other teachings for space. We also added a few guards that vanilla doesn't need:</p>
+<ul>
+  <li><strong>No two answers at once</strong> - the rite editor refuses a second answer to the same question.</li>
+  <li><strong>No silent switching</strong> - outside the rite editor and council rulings, a rite can set its answer aside or take its first answer, but it can't jump straight from one answer to another.</li>
+  <li><strong>A steady mainline</strong> - the mainline rite's answers don't drift. They change when it receives a council ruling (more on that below).</li>
+  <li><strong>No instant heretics</strong> - when the mainline drops an answer, that answer becomes Permitted in the faith, so rites still holding yesterday's orthodoxy are not punished for it.</li>
+</ul>
+
+<figure class="shotimg"><img src="images/theology_tab.jpg" alt="The Theology tab of the faith window at the 395 start" loading="lazy"><figcaption>[Screenshot of the Theology tab in the faith window at the 395 start. Each rite shows the answer it holds to both questions, and who settled it.]</figcaption></figure>
+
+<h3>Your own position</h3>
+<p>You don't have to believe what your rite teaches. In the new <em>Theology</em> tab of the faith window you can <em>Adopt Position</em> on a question that has been raised, taking an answer as a personal tenet. It costs <strong>150 piety</strong> and you can't adopt another position on that question for <strong>5 years</strong>. Returning to your rite's teaching costs <strong>50 piety</strong>, and dropping a personal tenet causes major stress, as it does in vanilla. Your position is never taken away by script: if your rite changes its answer, you keep yours, and you are now a dissenter.</p>
+
+<h2>Questions That Arise and Spread</h2>
+
+<p>So where do the questions come from? In vanilla, tenets mostly arrive ready-made in a faith's history. In Fallen Eagle, a question <strong>arises</strong>. When it does, its answers are taught to a handful of characters where the dispute began, and from there they spread from teacher to student and court to court, year by year. If no church leader has heard of any answer after a while, one rite head learns of it, so a question can't stall unseen.</p>
+
+<p>Questions are shared across all of Christianity, not tied to one faith. Once an answer is known, rites can take it up. An AI rite head first considers his own answer, if his faith doesn't prohibit it and his rite hasn't rejected it; otherwise the rite makes a weighted choice leaning toward the mainline's answer, its rulers' answers and the stronger camps. The mainline rite itself is slow to commit.</p>
+
+<p>We also made sure <strong>nothing moves the mainline rite on its own</strong>. The paths vanilla offers for changing it, such as a new pope's rite becoming the mainline, are closed for Fallen Eagle's Christianity. The pope is still there, as head of the Roman Rite, but he speaks for his rite, not for the whole faith. In Fallen Eagle, orthodoxy moves only through councils.</p>
+
+<h2>Theological Controversies</h2>
+
+<p>A question that is merely known is not yet a crisis. To follow each dispute as it grows, we added a situation of our own, <strong>Theological Controversies</strong>, with one track per question. Each track moves through phases:</p>
+
+<div class="table-wrap">
+<table>
+  <tr><th>Phase</th><th>What it means</th></tr>
+  <tr><td>Not Yet Posed</td><td>No one has asked the question in earnest.</td></tr>
+  <tr><td>Emergence</td><td>The question has been raised and its first answers are taking shape, for 5 to 15 years.</td></tr>
+  <tr><td>Dissemination</td><td>Answers spread from teacher to student and court to court.</td></tr>
+  <tr><td>Controversy</td><td>The camps clash openly and bishops denounce one another.</td></tr>
+  <tr><td>Deliberation</td><td>The church demands a council. Only now can an Imperial Council take up the question.</td></tr>
+  <tr><td>Dormancy</td><td>Few still argue the question, though it can be taken up again.</td></tr>
+</table>
+</div>
+
+<p>The great figures of the Christian world (rite heads, holders of sees, kings and emperors, and you) are sorted into <strong>camps</strong>, one per answer plus the Uncommitted. Your camp is your personal answer if you hold one, otherwise your rite's.</p>
+
+<figure class="shotimg"><img src="images/theological_controversies_window.jpg" alt="The Theological Controversies situation window" loading="lazy"><figcaption>[The Theological Controversies window in a test game: the Holy Spirit question is in Controversy at 35 of the 100 progress it needs to reach Deliberation, with the Father and the Son listed beside it.]</figcaption></figure>
+
+<p>What drives a question forward is its <strong>progress</strong>. Each year it grows with how evenly the camps are matched inside each faith (a church where one answer already dominates generates little tension), with a smaller contribution from rival faiths, and it decays a little. Certain acts give it a sudden push, such as bishops of one camp being deposed or excommunicated. At <strong>50</strong>, after at least 10 years of Dissemination, the question breaks into Controversy, and it falls back if progress stays below 30 for 5 years. At <strong>100</strong> it enters Deliberation. A question that almost no one argues any more fades into Dormancy.</p>
+
+<figure class="fig"><svg viewBox="0 0 480 550" role="img" aria-label="The phases of a theological question"><defs><marker id="ah1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs><rect class="b" x="40" y="10" width="270" height="56" rx="6"/><text x="175.0" y="32" text-anchor="middle">Not Yet Posed</text><text class="s" x="175.0" y="51" text-anchor="middle">no one asks it in earnest</text><rect class="b" x="40" y="100" width="270" height="56" rx="6"/><text x="175.0" y="122" text-anchor="middle">Emergence</text><text class="s" x="175.0" y="141" text-anchor="middle">first answers take shape</text><rect class="b" x="40" y="190" width="270" height="56" rx="6"/><text x="175.0" y="212" text-anchor="middle">Dissemination</text><text class="s" x="175.0" y="231" text-anchor="middle">spreads for 10+ years; progress builds</text><rect class="b" x="40" y="280" width="270" height="56" rx="6"/><text x="175.0" y="302" text-anchor="middle">Controversy</text><text class="s" x="175.0" y="321" text-anchor="middle">the camps clash openly</text><rect class="hl" x="40" y="370" width="270" height="56" rx="6"/><text x="175.0" y="392" text-anchor="middle">Deliberation</text><text class="s" x="175.0" y="411" text-anchor="middle">the Church demands a council</text><path class="ln" d="M175.0,66 L175.0,98" marker-end="url(#ah1)"/><path class="ln" d="M175.0,156 L175.0,188" marker-end="url(#ah1)"/><text class="lbl" x="185.0" y="178.0" text-anchor="start">5–15 years</text><path class="ln" d="M175.0,246 L175.0,278" marker-end="url(#ah1)"/><text class="lbl" x="185.0" y="268.0" text-anchor="start">progress 50</text><path class="ln" d="M175.0,336 L175.0,368" marker-end="url(#ah1)"/><text class="lbl" x="185.0" y="358.0" text-anchor="start">progress 100</text><rect class="b" x="40" y="465" width="270" height="74" rx="6"/><text x="175.0" y="487" text-anchor="middle">A council rules, or it lapses</text><text class="s" x="175.0" y="506" text-anchor="middle">progress ×0.2 established</text><text class="s" x="175.0" y="523" text-anchor="middle">×0.6 inconclusive · ×0.8 failed or vetoed</text><path class="ln" d="M175.0,426 L175.0,463" marker-end="url(#ah1)"/><path class="ln" d="M40,502 L16,502 L16,218 L38,218" marker-end="url(#ah1)"/><path class="ln" d="M310,318 L332,318 L332,228 L312,228" marker-end="url(#ah1)"/><text class="s" x="340" y="278" text-anchor="start">below 30</text><text class="s" x="340" y="294" text-anchor="start">for 5 years</text><rect class="dim" x="330" y="100" width="140" height="56" rx="6"/><text x="400.0" y="122" text-anchor="middle">Dormancy</text><text class="s" x="400.0" y="141" text-anchor="middle">few still argue</text><path class="ln dash" d="M310,202 L392,158" marker-end="url(#ah1)"/><text class="s" x="356" y="196" text-anchor="start">fades</text></svg><figcaption>[Figure: the life of a question. A ruling, or a lapsed Deliberation, sends the question back to Dissemination with part of its progress.]</figcaption></figure>
+
+<p>Deliberation doesn't last forever. Its clock runs only in years when an emperor could actually call a council, so a child emperor doesn't waste the moment. After 10 such years, or 20 calendar years at most, the question returns to Dissemination unsettled.</p>
+
+<div class="callout">
+  <span class="label">How this differs from the Christian Church situation</span>
+  <p>Vanilla's Christian Church situation tracks the state of the whole Church through Chapters such as Reform or Crusade. Theological Controversies is narrower: it follows each dispute separately, and exists to answer one question - when does the church demand a council?</p>
+</div>
+
+<h2>Imperial Councils</h2>
+
+<p>In vanilla, an Ecumenical Council is hosted by the pope or an archbishop. In Fallen Eagle, only one person can summon an <strong>Imperial Council</strong>: the imperial convener. He is the Senior Augustus, or failing him the earliest acclaimed Augustus, and he must follow his empire's Official Imperial Faith, be landed and adult, and be free to act.</p>
+
+<p>A council can take up only a question in Deliberation. A faith holds one Imperial Council at a time, waits <strong>2 years</strong> between councils and <strong>10 years</strong> before returning to the same question. If you are the convener, the bishops will write to you with <em>The Church Calls for a Council</em>, and remind you if you delay. An AI convener doesn't wait. A council costs a player 50 gold; the AI pays nothing, so a question never stalls because the treasury is empty.</p>
+
+<figure class="shotimg"><img src="images/council_activity_scene_titles.jpg" alt="The Imperial Council activity window during the summons" loading="lazy"><figcaption>[Your Imperial Council: the emperor as host, with the leading churchmen beside him under their own titles, here the Pope and the Ecumenical Patriarch.]</figcaption></figure>
+
+<h3>Who votes</h3>
+<p>Only the <strong>electors</strong>, the clergy of the council's faith, vote, each weighted by their highest office. Lords may attend and lean on their own clergy.</p>
+
+<div class="table-wrap">
+<table>
+  <tr><th>Elector</th><th>Weight</th></tr>
+  <tr><td>Head of Faith</td><td>40</td></tr>
+  <tr><td>Holder of a see (a clerical region)</td><td>20</td></tr>
+  <tr><td>Head of a rite</td><td>10</td></tr>
+  <tr><td>Landed prelate</td><td>4</td></tr>
+  <tr><td>Court chaplain</td><td>1</td></tr>
+</table>
+</div>
+
+<p>Electors who stay home still vote their answer, but those present count half again as much. The emperor casts no vote. He sponsors the council, and the answer he holds gains extra weight equal to <strong>15%</strong> of the votes cast. An answer with a majority of the tally wins.</p>
+
+<figure class="shotimg"><img src="images/council_debate_tally.jpg" alt="The Imperial Council during the debate" loading="lazy"><figcaption>[The debate in session. The tally by answer is revealed when the fathers rule.]</figcaption></figure>
+
+<p>A council ends in one of three ways. <strong>Established</strong>: an answer wins and the emperor endorses it. <strong>Inconclusive</strong>: no answer reaches a majority, and every rite keeps its own. <strong>Failed</strong>: the council breaks up or is vetoed. In each case Deliberation ends and the question returns to Dissemination, keeping a fifth, three fifths or four fifths of its progress respectively.</p>
+
+<h3>The Emperor's Choice</h3>
+<p>The fathers decide <em>what</em> the answer is, and the emperor cannot replace their majority with his own. What he decides is whether their ruling binds the church:</p>
+<ul>
+  <li><strong>Endorse</strong> - the answer is established and goes out to the churches to be received.</li>
+  <li><strong>Veto</strong> - nothing is established. It costs <strong>100 piety</strong>, a medium loss of legitimacy and the goodwill of every father who voted for the answer, and the failed settlement inflames the dispute.</li>
+  <li><strong>Let the fathers vote again</strong> (not yet in the game) - once per council, for <strong>50 piety</strong>, you lean on the electors who vote against your answer for about a month, and then the votes are counted again. The second ruling cannot be sent back.</li>
+</ul>
+
+<figure class="shotimg"><img src="images/ruling_event_veto_tooltip.jpg" alt="The Fathers Have Ruled event with the veto tooltip" loading="lazy"><figcaption>[Screenshot of the emperor's choice in a test game at 395. The fathers voted Pro-Nicene; hovering "I veto the ruling" shows its price.]</figcaption></figure>
+
+<figure class="shotimg"><img src="images/council_vetoed_message.jpg" alt="The Council Vetoed message" loading="lazy"><figcaption>[Screenshot of the Council Vetoed message that follows. The dispute goes on.]</figcaption></figure>
+
+<figure class="shotimg"><img src="images/ruling_event_send_back.jpg" alt="The Fathers Have Ruled with the send-back option" loading="lazy"><figcaption>[Sending the fathers back to vote again: once only, for 50 piety, and the emperor leans on every attending elector who votes against his answer.]</figcaption></figure>
+<figure class="shotimg"><img src="images/ruling_event_resubmitted.jpg" alt="The second ruling after a recount" loading="lazy"><figcaption>[After the recount the ruling comes back, and this time it cannot be sent back again.]</figcaption></figure>
+
+<p>An AI emperor never sends a ruling back. He vetoes only when his own answer lost, it still won at least <strong>33%</strong> of the fathers' votes (not counting his pull), and he can afford the piety. Otherwise he endorses, even rulings he dislikes.</p>
+
+<div class="callout">
+  <span class="label">Why not let the emperor pick the answer?</span>
+  <p>Early versions did, and every game became "whatever the emperor believes is orthodoxy". The emperor chooses when and where to summon and how hard to lean, but the answer belongs to the bishops, and whether it sticks belongs to the churches.</p>
+</div>
+
+<h2>Receiving the Ruling</h2>
+
+<p>This is the biggest departure from vanilla. In vanilla, a council or bull changes a tenet's status for the whole faith at once. In Fallen Eagle, a ruling has to be <strong>received</strong>: each rite decides, through its head, whether to accept the council's answer as its own teaching.</p>
+
+<p>A ruling reaches every rite of the council's faith that sent at least one of its clergy, plus the mainline rite, which always receives it. Rites that sent no one are not bound. A rite that already holds the answer, whose head sponsored the council, or that has no head accepts at once. Every other head gets <em>A Ruling to Receive</em>:</p>
+<ul>
+  <li><strong>Accept</strong> - the answer becomes a core tenet of the rite, replacing its old answer or, if the rite is full, displacing another tenet.</li>
+  <li><strong>Refuse</strong> - the rite keeps its teaching, the council's sponsor takes it badly, the refusal is recorded against the rite, and the question's progress rises in proportion to the rite's share of Christian counties. A small church's refusal is a footnote; a great one's reopens the dispute.</li>
+</ul>
+<p>A branch rite that hasn't answered within <strong>2 years</strong> lets the ruling lapse; the mainline rite's silence counts as consent. The AI weighs its head's position, its clergy and rulers, its opinion of the sponsor and the size of the majority, always keeping a chance between 5% and 95%. A council can be won and still be lost in the provinces.</p>
+
+<figure class="fig"><svg viewBox="0 0 480 790" role="img" aria-label="From council to reception"><defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs><rect class="b" x="30" y="10" width="420" height="56" rx="6"/><text x="240.0" y="32" text-anchor="middle">The emperor convenes an Imperial Council</text><text class="s" x="240.0" y="51" text-anchor="middle">only while the question is in Deliberation</text><path class="ln" d="M240,66 L240,88" marker-end="url(#ah2)"/><rect class="b" x="30" y="90" width="420" height="56" rx="6"/><text x="240.0" y="112" text-anchor="middle">The fathers debate and vote</text><text class="s" x="240.0" y="131" text-anchor="middle">votes weighted by rank; the host pulls 15% his way</text><path class="ln" d="M240,146 L240,168" marker-end="url(#ah2)"/><rect class="b" x="30" y="170" width="420" height="46" rx="6"/><text x="240.0" y="198.0" text-anchor="middle">Does one answer win 50% of the votes cast?</text><path class="ln" d="M150,216 L150,248" marker-end="url(#ah2)"/><text class="lbl" x="142" y="238" text-anchor="end">no</text><path class="ln" d="M330,216 L330,248" marker-end="url(#ah2)"/><text class="lbl" x="338" y="238" text-anchor="start">yes</text><rect class="dim" x="30" y="250" width="200" height="56" rx="6"/><text x="130.0" y="272" text-anchor="middle">No ruling</text><text class="s" x="130.0" y="291" text-anchor="middle">inconclusive or failed</text><rect class="b" x="250" y="250" width="200" height="56" rx="6"/><text x="350.0" y="272" text-anchor="middle">The emperor decides</text><text class="s" x="350.0" y="291" text-anchor="middle">while the ruling is held</text><path class="ln" d="M350,306 L92,346" marker-end="url(#ah2)"/><path class="ln" d="M350,306 L240,346" marker-end="url(#ah2)"/><path class="ln" d="M350,306 L388,346" marker-end="url(#ah2)"/><rect class="hl" x="30" y="348" width="124" height="72" rx="6"/><text x="92.0" y="370" text-anchor="middle">Endorse</text><text class="s" x="92.0" y="389" text-anchor="middle">the answer is</text><text class="s" x="92.0" y="406" text-anchor="middle">established</text><rect class="b" x="178" y="348" width="124" height="72" rx="6"/><text x="240.0" y="370" text-anchor="middle">Veto</text><text class="s" x="240.0" y="389" text-anchor="middle">−100 piety,</text><text class="s" x="240.0" y="406" text-anchor="middle">legitimacy loss</text><rect class="b" x="326" y="348" width="124" height="72" rx="6"/><text x="388.0" y="370" text-anchor="middle">Send back</text><text class="s" x="388.0" y="389" text-anchor="middle">once only,</text><text class="s" x="388.0" y="406" text-anchor="middle">−50 piety</text><path class="ln" d="M450,384 L468,384 L468,118 L452,118" marker-end="url(#ah2)"/><text class="lbl" x="463" y="230" text-anchor="middle" transform="rotate(-90 463 230)">vote again</text><path class="ln" d="M92,420 L92,448" marker-end="url(#ah2)"/><rect class="b" x="30" y="450" width="420" height="56" rx="6"/><text x="240.0" y="472" text-anchor="middle">Represented rites and the mainline rite receive it</text><text class="s" x="240.0" y="491" text-anchor="middle">each head accepts, refuses, or lets it lapse</text><path class="ln" d="M135,506 L135,530" marker-end="url(#ah2)"/><path class="ln" d="M345,506 L345,530" marker-end="url(#ah2)"/><rect class="b" x="30" y="532" width="200" height="72" rx="6"/><text x="130.0" y="554" text-anchor="middle">A branch rite</text><text class="s" x="130.0" y="573" text-anchor="middle">accept: takes the answer</text><text class="s" x="130.0" y="590" text-anchor="middle">refuse or lapse: keeps its own</text><rect class="hl" x="250" y="532" width="200" height="72" rx="6"/><text x="350.0" y="554" text-anchor="middle">The mainline rite</text><text class="s" x="350.0" y="573" text-anchor="middle">accept or lapse: orthodoxy,</text><text class="s" x="350.0" y="590" text-anchor="middle">the faith takes its name</text><path class="ln" d="M345,604 L345,628" marker-end="url(#ah2)"/><text class="lbl" x="353" y="620" text-anchor="start">refuses</text><rect class="b" x="250" y="630" width="200" height="56" rx="6"/><text x="350.0" y="652" text-anchor="middle">A safe successor?</text><text class="s" x="350.0" y="671" text-anchor="middle">a rite that holds the answer</text><path class="ln" d="M300,686 L190,718" marker-end="url(#ah2)"/><text class="lbl" x="236" y="698" text-anchor="end">no</text><path class="ln" d="M400,686 L400,718" marker-end="url(#ah2)"/><text class="lbl" x="408" y="706" text-anchor="start">yes</text><rect class="dim" x="30" y="720" width="200" height="56" rx="6"/><text x="130.0" y="742" text-anchor="middle">Refusal recorded</text><text class="s" x="130.0" y="761" text-anchor="middle">the controversy flares</text><rect class="hl" x="250" y="720" width="200" height="56" rx="6"/><text x="350.0" y="742" text-anchor="middle">It becomes mainline</text><text class="s" x="350.0" y="761" text-anchor="middle">the old mainline steps aside</text></svg><figcaption>[Figure: from council to reception. The faith's name follows only rulings on the Father and the Son. The "Send back" branch and the successor step at the bottom are not yet in the game.]</figcaption></figure>
+
+<h3>The mainline rite and the name of the faith</h3>
+<p>The mainline rite receives a ruling like any other, with one difference: its acceptance makes the ruling the orthodoxy of the whole faith. And when it accepts a new answer on the Father and the Son, <strong>the faith takes its name from that answer</strong>. At the 361 start the faith is <em>Constantinian Christianity</em>. Receive a Pro-Nicene ruling and it becomes <em>Nicene Christianity</em>; receive a Homoian one and it becomes <em>Homoian Christianity</em>. A later council can change it again.</p>
+
+<figure class="shotimg"><img src="images/ruling_to_receive_accept_tooltip.jpg" alt="A Ruling to Receive, mainline version, with the accept tooltip" loading="lazy"><figcaption>[Screenshot of the mainline rite's version of "A Ruling to Receive", in a test game at 395 with the player as head of the Roman Rite. The accept tooltip shows the new tenet taking another's place and the ruling becoming the orthodoxy of the faith.]</figcaption></figure>
+
+<figure class="shotimg"><img src="images/faith_window_homoian_faith.jpg" alt="The faith window showing the Homoian Faith" loading="lazy"><figcaption>[Screenshot of the faith window after the Roman Rite received a Homoian ruling in a test game: the faith is now the Homoian Faith, while the Constantinopolitan Rite shown here keeps its own answer. Rites are not bound to follow the mainline.]</figcaption></figure>
+
+<div class="callout">
+  <span class="label">Why receptions?</span>
+  <p>A council's authority has always depended on whether the churches accepted it. Reception also gives every rite head, player or AI, a real decision, and turns "the emperor called a council" into a story that plays out across the map for years afterwards.</p>
+</div>
+
+<h2>When the Mainline Rite Refuses</h2>
+
+<p class="draft" style="display:block"><strong>Not yet in the game.</strong> This section is reviewed and approved but still being tested.</p>
+
+<p>So what happens when a council rules one way and the mainline rite refuses? Orthodoxy follows the councils, so <strong>the mainline passes to a rite that holds the council's answer</strong>: the convener's own rite if it holds it, otherwise the holder with the most counties. The old mainline becomes a branch rite, its teachings that the new mainline lacks become Permitted, and the faith's organisation carries over unchanged. Players of that faith are told with the message <em>A New Mainline Rite</em>. If no rite holds the answer, nothing changes hands and the refusal simply inflames the dispute.</p>
+
+<figure class="shotimg"><img src="images/ruling_to_receive_refuse_successor.jpg" alt="Refusing a ruling as head of the mainline rite" loading="lazy"><figcaption>[Refusing as head of the mainline rite: the tooltip warns which rite will likely become the new Mainline Rite.]</figcaption></figure>
+
+<figure class="shotimg"><img src="images/new_mainline_rite_message.jpg" alt="The A New Mainline Rite message" loading="lazy"><figcaption>[The message every player of the faith receives when the mainline changes hands.]</figcaption></figure>
+
+<p>This is where vanilla's Divergence rules could bite us. Changing the mainline moves every rite's Divergence at once, and a rite created or pushed past 100 becomes a new faith. A careless switch could split half of Christendom overnight. So before a rite becomes the mainline, we estimate every rite's Divergence against it, then make the switch and check the real values, undoing it at once if any rite reaches <strong>90</strong>. If no candidate passes, the refusal is handled as one with no successor. Breaking away from the church will come later, as a deliberate outcome rather than an accident.</p>
+
+<h2>Vanilla and Fallen Eagle Side by Side</h2>
+
+<div class="table-wrap">
+<table>
+  <tr><th></th><th>Vanilla 1.20 + By God Alone</th><th>Fallen Eagle</th></tr>
+  <tr><td>Where teaching lives</td><td>Rites, with each tenet Core, Permitted, Known or Prohibited</td><td>The same. Theological answers are ordinary tenets, at most one per question per rite</td></tr>
+  <tr><td>Where new teaching comes from</td><td>Faith history, study, and clergy founding new rites</td><td>Questions arise in play, and their answers spread from character to character</td></tr>
+  <tr><td>How the faith's teaching changes</td><td>Ecumenical Councils, or the Head of Faith (Papal Bulls in Catholicism), set a tenet's status for the faith</td><td>An Imperial Council rules; each rite then accepts or refuses</td></tr>
+  <tr><td>Who calls councils</td><td>The pope or an archbishop</td><td>Only the imperial convener, and only on a question in Deliberation</td></tr>
+  <tr><td>The mainline rite</td><td>Follows the Head of Faith; a new pope's rite can become the mainline</td><td>No Head of Faith. The mainline changes only when it refuses a ruling (not yet in the game)</td></tr>
+  <tr><td>Divergence and heresy</td><td>Above 65 heretical; a Heresy is declared by council or bull; over 100 at creation splits at once</td><td>The same engine, guarded so that council outcomes never split a rite by accident</td></tr>
+  <tr><td>Church-wide situation</td><td>The Christian Church: seven Chapters and a Great Schism track</td><td>Theological Controversies: one track per question, with phases, camps and progress</td></tr>
+  <tr><td>The faith's name</td><td>-</td><td>Follows the mainline's answer on the Father and the Son</td></tr>
+</table>
+</div>
+
+<figure class="fig"><svg viewBox="0 0 480 372" role="img" aria-label="How teaching changes in vanilla and in Fallen Eagle"><defs><marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker></defs><text class="lbl" x="120" y="20" text-anchor="middle">In vanilla</text><text class="lbl" x="360" y="20" text-anchor="middle">In Fallen Eagle</text><rect class="b" x="10" y="32" width="220" height="60" rx="6"/><text x="120" y="56" text-anchor="middle">A tenet is Known</text><text class="s" x="120" y="77" text-anchor="middle">from history, study or preaching</text><rect class="b" x="10" y="112" width="220" height="60" rx="6"/><text x="120" y="136" text-anchor="middle">Clergy found a rite</text><text class="s" x="120" y="157" text-anchor="middle">pick tenets, see the Divergence</text><rect class="b" x="10" y="192" width="220" height="60" rx="6"/><text x="120" y="216" text-anchor="middle">Faith-wide ruling</text><text class="s" x="120" y="237" text-anchor="middle">Ecumenical Council or Papal Bull</text><rect class="dim" x="10" y="272" width="220" height="60" rx="6"/><text x="120" y="296" text-anchor="middle">Divergence decides</text><text class="s" x="120" y="317" text-anchor="middle">too far from mainline: heresy</text><path class="ln" d="M120,92 L120,110" marker-end="url(#ah3)"/><path class="ln" d="M120,172 L120,190" marker-end="url(#ah3)"/><path class="ln" d="M120,252 L120,270" marker-end="url(#ah3)"/><rect class="b" x="250" y="32" width="220" height="60" rx="6"/><text x="360" y="56" text-anchor="middle">A question arises</text><text class="s" x="360" y="77" text-anchor="middle">answers spread as tenets</text><rect class="b" x="250" y="112" width="220" height="60" rx="6"/><text x="360" y="136" text-anchor="middle">Controversy builds</text><text class="s" x="360" y="157" text-anchor="middle">phases, camps and progress</text><rect class="hl" x="250" y="192" width="220" height="60" rx="6"/><text x="360" y="216" text-anchor="middle">Imperial Council</text><text class="s" x="360" y="237" text-anchor="middle">the emperor convenes, clergy vote</text><rect class="hl" x="250" y="272" width="220" height="60" rx="6"/><text x="360" y="296" text-anchor="middle">Each rite receives</text><text class="s" x="360" y="317" text-anchor="middle">accept or refuse the ruling</text><path class="ln" d="M360,92 L360,110" marker-end="url(#ah3)"/><path class="ln" d="M360,172 L360,190" marker-end="url(#ah3)"/><path class="ln" d="M360,252 L360,270" marker-end="url(#ah3)"/><path class="ln dash" d="M360,332 L360,350 L120,350 L120,334" marker-end="url(#ah3)"/><text class="s" x="240" y="366" text-anchor="middle">Divergence still applies underneath</text></svg><figcaption>[Figure: how teaching changes. Fallen Eagle keeps vanilla's tenets and Divergence, and replaces the way a faith's teaching is changed.]</figcaption></figure>
+
+<h2>History and Your Game</h2>
+
+<p>Nothing in this system fires because the calendar says so. A question can reach its council early, late or never, and whichever answer wins depends on who holds the purple, who sits in the hall and which churches accept the result. The later bookmarks keep their history as a starting point: 395 starts after the settlement of 381, as <em>Nicene Christianity</em>, and 476 after Chalcedon, as <em>Chalcedonianism</em>. Where your game goes from there is up to you.</p>
+
+<p>In a game started before 451, the Chalcedonian split won't happen until there is a question about the nature of Christ for it to grow out of. We would rather leave it out than fire it by date.</p>
+
+<h2>What's Next</h2>
+
+<p>Next we are running long unattended test games to see how often councils sit, how they end, and how often the mainline changes hands, so many numbers above will change. After that come outcomes for each rite after Deliberation, deliberate schism and reunion, regional synods, an emperor's lasting stance on doctrine and, with historians, the real questions this system was built to carry.</p>
+
+<p class="signoff">That's the whole system, from a single tenet to a council that may or may not be received. As always, we'd love to hear what you think, especially about how the machinery feels, since the questions themselves are still to come. Until next time: <em>sedeat concilium, et Deus iudicet</em> - let the council sit, and God judge.</p>
+
+<p class="signoff">&mdash; The Fallen Eagle Team</p>
+
+</article>
+</div>
+</body>
+</html>
